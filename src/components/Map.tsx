@@ -11,7 +11,7 @@ const Map = () => {
     if (!mapContainer.current) return;
 
     try {
-      mapboxgl.accessToken = 'VOTRE_CLE_PUBLIQUE_MAPBOX';
+      mapboxgl.accessToken = 'pk.eyJ1IjoibG9pYzY2IiwiYSI6ImNsejZ4NDB6bTAzYWMyaXNhM3A2bjN4Mm8ifQ.2om2iGQerqXcK2yiDuO_SQ';
       
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
