@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
+import { Link } from 'react-router-dom';
 
 const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -16,8 +17,8 @@ const Navigation = () => {
   }, []);
 
   const navItems = [
-    { name: 'Villes', href: '#cities' },
-    { name: 'Réservation', href: '#booking' },
+    { name: 'Villes', href: '/cities' },
+    { name: 'Réservation', href: '/booking' },
     { name: 'Carte', href: '#map' },
     { name: 'Contact', href: '#contact' },
   ];
@@ -30,22 +31,24 @@ const Navigation = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <a href="#" className="text-2xl font-bold text-primary">
+          <Link to="/" className="text-2xl font-bold text-primary">
             Jap Tourisme
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <a
+              <Link
                 key={item.name}
-                href={item.href}
+                to={item.href.startsWith('/') ? item.href : `/${item.href}`}
                 className="text-secondary hover:text-primary transition-colors"
               >
                 {item.name}
-              </a>
+              </Link>
             ))}
-            <Button variant="default">Réserver</Button>
+            <Link to="/booking">
+              <Button variant="default">Réserver</Button>
+            </Link>
           </div>
 
           {/* Mobile Navigation Button */}
@@ -62,18 +65,20 @@ const Navigation = () => {
           <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-lg animate-fade-in">
             <div className="px-4 py-2 space-y-2">
               {navItems.map((item) => (
-                <a
+                <Link
                   key={item.name}
-                  href={item.href}
+                  to={item.href.startsWith('/') ? item.href : `/${item.href}`}
                   className="block py-2 text-secondary hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
-                </a>
+                </Link>
               ))}
-              <Button className="w-full" variant="default">
-                Réserver
-              </Button>
+              <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
+                <Button className="w-full" variant="default">
+                  Réserver
+                </Button>
+              </Link>
             </div>
           </div>
         )}
