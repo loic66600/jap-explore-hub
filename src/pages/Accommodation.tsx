@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Map from "@/components/Map";
+import AccommodationDetail from "@/components/AccommodationDetail";
 import { fr } from 'date-fns/locale';
 
 const Accommodation = () => {
@@ -42,6 +43,23 @@ const Accommodation = () => {
         description: "Voici les hébergements disponibles",
       });
     }, 2000);
+  };
+
+  // Sample accommodation data for demonstration
+  const sampleAccommodation = {
+    id: 1,
+    name: "Park Hyatt Tokyo",
+    type: "Hôtel de luxe",
+    price: "50000",
+    rating: 4.8,
+    images: [
+      "https://images.unsplash.com/photo-1503899036084-c55cdd92da26",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945",
+      "https://images.unsplash.com/photo-1582719508461-905c673771fd"
+    ],
+    description: "Situé dans le quartier animé de Shinjuku, le Park Hyatt Tokyo offre une expérience de luxe unique avec une vue imprenable sur la ville et le Mont Fuji. Les chambres spacieuses allient élégance contemporaine et touches traditionnelles japonaises.",
+    amenities: ["Wifi", "Restaurant", "Parking", "Onsen", "Breakfast"],
+    cancellationPolicy: "Annulation gratuite jusqu'à 48h avant l'arrivée. Au-delà, le montant de la première nuit sera facturé."
   };
 
   return (
@@ -164,10 +182,17 @@ const Accommodation = () => {
           </div>
         </div>
 
-        {/* Map Section */}
+        {/* Map Section with Markers */}
         <div className="mt-8">
           <Map />
         </div>
+
+        {/* Accommodation Details Section */}
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <AccommodationDetail accommodation={sampleAccommodation} />
+          </div>
+        </section>
       </div>
     </div>
   );
