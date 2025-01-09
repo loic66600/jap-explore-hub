@@ -19,6 +19,7 @@ const Navigation = () => {
   const navItems = [
     { name: 'Villes', href: '/cities' },
     { name: 'Réservation', href: '/booking' },
+    { name: 'Hébergement', href: '/accommodation' },
     { name: 'Carte', href: '#map' },
     { name: 'Contact', href: '#contact' },
   ];
