@@ -12,8 +12,7 @@ const Index = () => {
       <Navigation />
       <Hero />
       <Cities />
-      <Booking />
-      <Map />
+      <Map type="cities" />
       <Contact />
       <Footer />
     </div>

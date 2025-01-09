@@ -64,7 +64,7 @@ const Booking = () => {
 
         {/* Map Section */}
         <div className="mt-8">
-          <Map />
+          <Map type="booking" />
         </div>
       </div>
     </div>

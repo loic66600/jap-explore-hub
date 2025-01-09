@@ -182,9 +182,9 @@ const Accommodation = () => {
           </div>
         </div>
 
-        {/* Map Section with Markers */}
+        {/* Map Section */}
         <div className="mt-8">
-          <Map />
+          <Map type="accommodations" />
         </div>
 
         {/* Accommodation Details Section */}
