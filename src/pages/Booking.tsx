@@ -12,10 +12,14 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from 'date-fns/locale';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import Map from "@/components/Map";
 
 const Booking = () => {
   const [departureDate, setDepartureDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
+  const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
   const handleSearch = () => {
@@ -28,11 +32,20 @@ const Booking = () => {
       return;
     }
 
-    // TODO: Implement search logic
+    setIsSearching(true);
     toast({
       title: "Recherche en cours",
       description: "Nous recherchons les meilleures offres pour vous",
     });
+
+    // Simuler une recherche
+    setTimeout(() => {
+      setIsSearching(false);
+      toast({
+        title: "Recherche terminée",
+        description: "Voici les résultats de votre recherche",
+      });
+    }, 2000);
   };
 
   return (
@@ -144,6 +157,40 @@ const Booking = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Transport Type */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Type de transport</label>
+              <Select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisissez votre transport" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="plane">Avion</SelectItem>
+                  <SelectItem value="train">Train</SelectItem>
+                  <SelectItem value="bus">Bus</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Activities */}
+            <div className="space-y-4">
+              <label className="text-sm font-medium">Activités supplémentaires</label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="guided-tour" />
+                  <Label htmlFor="guided-tour">Visite guidée</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="tea-ceremony" />
+                  <Label htmlFor="tea-ceremony">Cérémonie du thé</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox id="cooking-class" />
+                  <Label htmlFor="cooking-class">Cours de cuisine</Label>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Search Button */}
@@ -152,10 +199,16 @@ const Booking = () => {
               size="lg"
               className="w-full md:w-auto min-w-[200px] animate-fade-up"
               onClick={handleSearch}
+              disabled={isSearching}
             >
-              Rechercher
+              {isSearching ? "Recherche en cours..." : "Rechercher"}
             </Button>
           </div>
+        </div>
+
+        {/* Map Section */}
+        <div className="mt-8">
+          <Map />
         </div>
       </div>
     </div>
