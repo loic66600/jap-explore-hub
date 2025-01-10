@@ -73,7 +73,7 @@ const Cities = () => {
                   <h3 className="text-2xl font-bold text-white mb-2">{city.name}</h3>
                   <p className="text-white/90">{city.description}</p>
                   <Link 
-                    to={`/cities/${city.name.toLowerCase()}`}
+                    to={`/cities/${city.id}`}
                     className="mt-4"
                   >
                     <Button>Explorer {city.name}</Button>
