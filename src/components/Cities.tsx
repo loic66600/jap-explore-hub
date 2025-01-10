@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface City {
   id: number;
@@ -20,7 +22,7 @@ const cities: City[] = [
   {
     id: 2,
     name: 'Kyoto',
-    description: 'L\'ancienne capitale impériale aux mille temples.',
+    description: "L'ancienne capitale impériale aux mille temples.",
     image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
     highlights: ['Fushimi Inari', 'Kinkaku-ji', 'Quartier de Gion'],
   },
@@ -70,6 +72,12 @@ const Cities = () => {
                 <div className="absolute inset-0 p-6 flex flex-col justify-end">
                   <h3 className="text-2xl font-bold text-white mb-2">{city.name}</h3>
                   <p className="text-white/90">{city.description}</p>
+                  <Link 
+                    to={`/cities/${city.name.toLowerCase()}`}
+                    className="mt-4"
+                  >
+                    <Button>Explorer {city.name}</Button>
+                  </Link>
                 </div>
               </div>
             </motion.div>

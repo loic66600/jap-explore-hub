@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import CitiesPage from "./pages/Cities";
 import Booking from "./pages/Booking";
 import Accommodation from "./pages/Accommodation";
+import CityDetail from "./pages/CityDetail";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/cities" element={<CitiesPage />} />
+          <Route path="/cities/:cityId" element={<CityDetail />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/accommodation" element={<Accommodation />} />
         </Routes>
