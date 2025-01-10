@@ -85,7 +85,7 @@ const citiesData: Record<number, CityData> = {
     mainAttractions: [
       {
         name: 'Kinkaku-ji',
-        description: 'Le pavillon d'or, un trésor national.',
+        description: 'Le pavillon d\'or, un trésor national.',
         image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
       },
       {
@@ -114,7 +114,7 @@ const citiesData: Record<number, CityData> = {
   3: {
     id: 3,
     name: 'Osaka',
-    title: 'Savourez la gastronomie d'Osaka',
+    title: 'Savourez la gastronomie d\'Osaka',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
     description: 'Ville dynamique réputée pour sa gastronomie et sa vie nocturne.',
     bannerImage: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
@@ -123,7 +123,7 @@ const citiesData: Record<number, CityData> = {
     attractions: 80,
     mainAttractions: [
       {
-        name: 'Château d'Osaka',
+        name: 'Château d\'Osaka',
         description: 'Un symbole historique entouré de magnifiques jardins.',
         image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
       },
@@ -193,7 +193,7 @@ const citiesData: Record<number, CityData> = {
     name: 'Hokkaido',
     title: 'Explorez la nature de Hokkaido',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
-    description: 'Destination idéale pour les amateurs de plein air et de sports d'hiver.',
+    description: 'Destination idéale pour les amateurs de plein air et de sports d\'hiver.',
     bannerImage: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
     population: '5.4 millions',
     bestTime: 'Décembre-Février (Hiver) / Juillet-Août (Été)',
