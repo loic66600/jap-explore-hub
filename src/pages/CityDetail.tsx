@@ -8,7 +8,7 @@ import Map from '@/components/Map';
 import Navigation from '@/components/Navigation';
 
 interface CityData {
-  id: string;
+  id: number;
   name: string;
   title: string;
   subtitle: string;
@@ -31,9 +31,9 @@ interface CityData {
   food: string[];
 }
 
-const citiesData: Record<string, CityData> = {
-  tokyo: {
-    id: 'tokyo',
+const citiesData: Record<number, CityData> = {
+  1: {
+    id: 1,
     name: 'Tokyo',
     title: 'Bienvenue à Tokyo',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
@@ -72,8 +72,8 @@ const citiesData: Record<string, CityData> = {
     transport: 'Utilisation de la carte Suica/Pasmo recommandée',
     food: ['Sushi', 'Ramen', 'Tempura'],
   },
-  kyoto: {
-    id: 'kyoto',
+  2: {
+    id: 2,
     name: 'Kyoto',
     title: 'Plongez dans la tradition de Kyoto',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
@@ -85,18 +85,18 @@ const citiesData: Record<string, CityData> = {
     mainAttractions: [
       {
         name: 'Kinkaku-ji',
-        description: 'Le pavillon d’or, un trésor national.',
+        description: 'Le pavillon d'or, un trésor national.',
         image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
       },
       {
         name: 'Arashiyama Bamboo Grove',
         description: 'Une promenade dans une forêt magique.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
       },
       {
         name: 'Fushimi Inari-taisha',
         description: 'Les célèbres torii rouges.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
       },
     ],
     itineraries: [
@@ -104,17 +104,17 @@ const citiesData: Record<string, CityData> = {
       { days: 2, description: 'Découverte de Gion et du marché de Nishiki.' },
     ],
     images: [
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
+      'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e',
     ],
     transport: 'Bus et vélo recommandés',
     food: ['Kaiseki', 'Yudofu', 'Matcha'],
   },
-  osaka: {
-    id: 'osaka',
+  3: {
+    id: 3,
     name: 'Osaka',
-    title: 'Savourez la gastronomie d’Osaka',
+    title: 'Savourez la gastronomie d'Osaka',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
     description: 'Ville dynamique réputée pour sa gastronomie et sa vie nocturne.',
     bannerImage: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
@@ -123,19 +123,19 @@ const citiesData: Record<string, CityData> = {
     attractions: 80,
     mainAttractions: [
       {
-        name: 'Château d’Osaka',
+        name: 'Château d'Osaka',
         description: 'Un symbole historique entouré de magnifiques jardins.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
       },
       {
         name: 'Dotonbori',
         description: 'Quartier animé pour savourer des spécialités comme les takoyaki.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
       },
       {
         name: 'Universal Studios Japan',
         description: 'Un parc d\'attractions pour toute la famille.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1590559899731-a382839e5549',
       },
     ],
     itineraries: [
@@ -143,15 +143,15 @@ const citiesData: Record<string, CityData> = {
       { days: 2, description: 'Visite de Universal Studios et shopping.' },
     ],
     images: [
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+      'https://images.unsplash.com/photo-1590559899731-a382839e5549',
+      'https://images.unsplash.com/photo-1590559899731-a382839e5549',
+      'https://images.unsplash.com/photo-1590559899731-a382839e5549',
     ],
     transport: 'Métro pour se déplacer rapidement',
     food: ['Takoyaki', 'Okonomiyaki', 'Kushikatsu'],
   },
-  nara: {
-    id: 'nara',
+  4: {
+    id: 4,
     name: 'Nara',
     title: 'Découvrez l\'histoire de Nara',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
@@ -164,36 +164,36 @@ const citiesData: Record<string, CityData> = {
       {
         name: 'Temple Tōdai-ji',
         description: 'Abritant une statue géante de Bouddha.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027',
       },
       {
         name: 'Parc de Nara',
         description: 'Célèbre pour ses cerfs en liberté.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027',
       },
       {
         name: 'Mont Wakakusa',
         description: 'Une randonnée avec une vue spectaculaire sur la ville.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027',
       },
     ],
     itineraries: [
       { days: 1, description: 'Rencontre avec les cerfs et visite des temples.' },
     ],
     images: [
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+      'https://images.unsplash.com/photo-1472396961693-142e6e269027',
+      'https://images.unsplash.com/photo-1472396961693-142e6e269027',
+      'https://images.unsplash.com/photo-1472396961693-142e6e269027',
     ],
     transport: 'Bus et vélo recommandés',
     food: ['Kakinoha-zushi', 'Nara-zuke', 'Sake'],
   },
-  hokkaido: {
-    id: 'hokkaido',
+  5: {
+    id: 5,
     name: 'Hokkaido',
     title: 'Explorez la nature de Hokkaido',
     subtitle: 'Découvrez les trésors culturels, historiques et modernes de cette ville.',
-    description: 'Destination idéale pour les amateurs de plein air et de sports d’hiver.',
+    description: 'Destination idéale pour les amateurs de plein air et de sports d'hiver.',
     bannerImage: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
     population: '5.4 millions',
     bestTime: 'Décembre-Février (Hiver) / Juillet-Août (Été)',
@@ -202,26 +202,26 @@ const citiesData: Record<string, CityData> = {
       {
         name: 'Parc national de Daisetsuzan',
         description: 'Un paradis pour les amoureux de la nature.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
       },
       {
         name: 'Sapporo Snow Festival',
         description: 'Un événement magique en hiver.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
       },
       {
         name: 'Ferme Tomita',
         description: 'Des champs de lavande à perte de vue en été.',
-        image: 'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+        image: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
       },
     ],
     itineraries: [
       { days: 4, description: 'Nature, ski et sources thermales.' },
     ],
     images: [
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
-      'https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0',
+      'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
+      'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
+      'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
     ],
     transport: 'Location de voiture recommandée',
     food: ['Ramen de Sapporo', 'Crabe', 'Fromage de Hokkaido'],
@@ -230,7 +230,7 @@ const citiesData: Record<string, CityData> = {
 
 const CityDetail = () => {
   const { cityId } = useParams();
-  const city = citiesData[cityId as string];
+  const city = citiesData[Number(cityId)];
 
   if (!city) {
     return <div>Ville non trouvée</div>;
