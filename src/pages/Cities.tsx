@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -47,6 +48,8 @@ const cities = [
 ];
 
 const CitiesPage = () => {
+  // ... keep existing code (hero section)
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -114,10 +117,12 @@ const CitiesPage = () => {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full group">
-                    Explorer {city.name}
-                    <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-                  </Button>
+                  <Link to={`/cities/${city.id}`} className="w-full">
+                    <Button className="w-full group">
+                      Explorer {city.name}
+                      <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             </motion.div>
