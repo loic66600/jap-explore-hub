@@ -20,6 +20,8 @@ interface BookingFormProps {
   returnDate: Date | undefined;
   setDepartureDate: (date: Date | undefined) => void;
   setReturnDate: (date: Date | undefined) => void;
+  setOrigin: (origin: string) => void;
+  setDestination: (destination: string) => void;
 }
 
 export const BookingForm = ({
@@ -29,6 +31,8 @@ export const BookingForm = ({
   returnDate,
   setDepartureDate,
   setReturnDate,
+  setOrigin,
+  setDestination,
 }: BookingFormProps) => {
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 -mt-20 relative z-10">
@@ -36,15 +40,15 @@ export const BookingForm = ({
         {/* Departure City */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Ville de départ</label>
-          <Select>
+          <Select onValueChange={setOrigin}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionnez votre ville" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="paris">Paris</SelectItem>
-              <SelectItem value="lyon">Lyon</SelectItem>
-              <SelectItem value="marseille">Marseille</SelectItem>
-              <SelectItem value="toulouse">Toulouse</SelectItem>
+              <SelectItem value="CDG">Paris (CDG)</SelectItem>
+              <SelectItem value="LYS">Lyon (LYS)</SelectItem>
+              <SelectItem value="MRS">Marseille (MRS)</SelectItem>
+              <SelectItem value="TLS">Toulouse (TLS)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -52,15 +56,15 @@ export const BookingForm = ({
         {/* Destination */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Destination</label>
-          <Select>
+          <Select onValueChange={setDestination}>
             <SelectTrigger>
               <SelectValue placeholder="Choisissez votre destination" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="tokyo">Tokyo</SelectItem>
-              <SelectItem value="kyoto">Kyoto</SelectItem>
-              <SelectItem value="osaka">Osaka</SelectItem>
-              <SelectItem value="hiroshima">Hiroshima</SelectItem>
+              <SelectItem value="HND">Tokyo (Haneda)</SelectItem>
+              <SelectItem value="NRT">Tokyo (Narita)</SelectItem>
+              <SelectItem value="KIX">Osaka (Kansai)</SelectItem>
+              <SelectItem value="ITM">Osaka (Itami)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -115,45 +119,12 @@ export const BookingForm = ({
               <SelectValue placeholder="Choisissez votre classe" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="economy">Économique</SelectItem>
-              <SelectItem value="premium">Premium</SelectItem>
-              <SelectItem value="business">Business</SelectItem>
+              <SelectItem value="ECONOMY">Économique</SelectItem>
+              <SelectItem value="PREMIUM_ECONOMY">Premium</SelectItem>
+              <SelectItem value="BUSINESS">Business</SelectItem>
+              <SelectItem value="FIRST">Première</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-
-        {/* Transport Type */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Type de transport</label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Choisissez votre transport" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="plane">Avion</SelectItem>
-              <SelectItem value="train">Train</SelectItem>
-              <SelectItem value="bus">Bus</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Activities */}
-        <div className="space-y-4">
-          <label className="text-sm font-medium">Activités supplémentaires</label>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="guided-tour" />
-              <Label htmlFor="guided-tour">Visite guidée</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="tea-ceremony" />
-              <Label htmlFor="tea-ceremony">Cérémonie du thé</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox id="cooking-class" />
-              <Label htmlFor="cooking-class">Cours de cuisine</Label>
-            </div>
-          </div>
         </div>
       </div>
 

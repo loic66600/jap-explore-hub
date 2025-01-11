@@ -2,19 +2,30 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Map from "@/components/Map";
 import { BookingForm } from "@/components/booking/BookingForm";
+import { useAmadeusFlights } from "@/hooks/useAmadeus";
+import { format } from 'date-fns';
 
 const Booking = () => {
   const [departureDate, setDepartureDate] = useState<Date>();
   const [returnDate, setReturnDate] = useState<Date>();
+  const [origin, setOrigin] = useState<string>("");
+  const [destination, setDestination] = useState<string>("");
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
+  const { data: flightsData, isLoading: isLoadingFlights } = useAmadeusFlights(
+    origin,
+    destination,
+    departureDate ? format(departureDate, 'yyyy-MM-dd') : '',
+    "1"
+  );
+
   const handleSearch = () => {
-    if (!departureDate || !returnDate) {
+    if (!departureDate || !returnDate || !origin || !destination) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Veuillez sélectionner les dates de départ et de retour",
+        description: "Veuillez remplir tous les champs obligatoires",
       });
       return;
     }
@@ -22,16 +33,10 @@ const Booking = () => {
     setIsSearching(true);
     toast({
       title: "Recherche en cours",
-      description: "Nous recherchons les meilleures offres pour vous",
+      description: "Nous recherchons les meilleurs vols pour vous",
     });
 
-    setTimeout(() => {
-      setIsSearching(false);
-      toast({
-        title: "Recherche terminée",
-        description: "Voici les résultats de votre recherche",
-      });
-    }, 2000);
+    // Les résultats seront automatiquement mis à jour grâce à useQuery
   };
 
   return (
@@ -60,7 +65,23 @@ const Booking = () => {
           returnDate={returnDate}
           setDepartureDate={setDepartureDate}
           setReturnDate={setReturnDate}
+          setOrigin={setOrigin}
+          setDestination={setDestination}
         />
+
+        {/* Results Section */}
+        {isLoadingFlights ? (
+          <div className="mt-8 text-center">
+            <p>Chargement des vols...</p>
+          </div>
+        ) : flightsData ? (
+          <div className="mt-8 grid gap-4">
+            {/* Afficher les résultats des vols ici */}
+            <pre className="bg-white p-4 rounded-lg shadow">
+              {JSON.stringify(flightsData, null, 2)}
+            </pre>
+          </div>
+        ) : null}
 
         {/* Map Section */}
         <div className="mt-8">
