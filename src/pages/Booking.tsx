@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Map from "@/components/Map";
 import { BookingForm } from "@/components/booking/BookingForm";
+import FlightResults from "@/components/booking/FlightResults";
 import { useAmadeusFlights } from "@/hooks/useAmadeus";
 import { format } from 'date-fns';
 
@@ -20,6 +21,12 @@ const Booking = () => {
     "1"
   );
 
+  // Filtrer uniquement les vols vers le Japon
+  const japanAirports = ['HND', 'NRT', 'KIX', 'ITM', 'FUK', 'CTS'];
+  const filteredFlights = flightsData?.data?.filter(flight => 
+    japanAirports.includes(flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.iataCode)
+  );
+
   const handleSearch = () => {
     if (!departureDate || !returnDate || !origin || !destination) {
       toast({
@@ -35,8 +42,6 @@ const Booking = () => {
       title: "Recherche en cours",
       description: "Nous recherchons les meilleurs vols pour vous",
     });
-
-    // Les résultats seront automatiquement mis à jour grâce à useQuery
   };
 
   return (
@@ -70,18 +75,13 @@ const Booking = () => {
         />
 
         {/* Results Section */}
-        {isLoadingFlights ? (
-          <div className="mt-8 text-center">
-            <p>Chargement des vols...</p>
-          </div>
-        ) : flightsData ? (
-          <div className="mt-8 grid gap-4">
-            {/* Afficher les résultats des vols ici */}
-            <pre className="bg-white p-4 rounded-lg shadow">
-              {JSON.stringify(flightsData, null, 2)}
-            </pre>
-          </div>
-        ) : null}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-secondary mb-4">Résultats de votre recherche</h2>
+          <FlightResults 
+            flights={filteredFlights || []} 
+            isLoading={isLoadingFlights} 
+          />
+        </div>
 
         {/* Map Section */}
         <div className="mt-8">

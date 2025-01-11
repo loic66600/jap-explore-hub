@@ -11,21 +11,36 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import Map from "@/components/Map";
-import AccommodationDetail from "@/components/AccommodationDetail";
+import HotelResults from "@/components/accommodation/HotelResults";
+import { useAmadeusHotels } from "@/hooks/useAmadeus";
 import { fr } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 const Accommodation = () => {
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
+  const [selectedCity, setSelectedCity] = useState<string>("");
   const [isSearching, setIsSearching] = useState(false);
   const { toast } = useToast();
 
+  const { data: hotelsData, isLoading: isLoadingHotels } = useAmadeusHotels(
+    selectedCity,
+    checkIn ? format(checkIn, 'yyyy-MM-dd') : '',
+    checkOut ? format(checkOut, 'yyyy-MM-dd') : ''
+  );
+
+  // Filtrer uniquement les hôtels au Japon
+  const japanCities = ['TYO', 'OSA', 'KIX', 'FUK', 'CTS', 'NGO'];
+  const filteredHotels = hotelsData?.data?.filter(hotel => 
+    japanCities.includes(hotel.hotel.cityCode)
+  );
+
   const handleSearch = () => {
-    if (!checkIn || !checkOut) {
+    if (!checkIn || !checkOut || !selectedCity) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Veuillez sélectionner les dates d'arrivée et de départ",
+        description: "Veuillez sélectionner les dates d'arrivée et de départ ainsi qu'une ville",
       });
       return;
     }
@@ -35,31 +50,6 @@ const Accommodation = () => {
       title: "Recherche en cours",
       description: "Nous recherchons les meilleurs hébergements pour vous",
     });
-
-    setTimeout(() => {
-      setIsSearching(false);
-      toast({
-        title: "Recherche terminée",
-        description: "Voici les hébergements disponibles",
-      });
-    }, 2000);
-  };
-
-  // Sample accommodation data for demonstration
-  const sampleAccommodation = {
-    id: 1,
-    name: "Park Hyatt Tokyo",
-    type: "Hôtel de luxe",
-    price: "50000",
-    rating: 4.8,
-    images: [
-      "https://images.unsplash.com/photo-1503899036084-c55cdd92da26",
-      "https://images.unsplash.com/photo-1566073771259-6a8506099945",
-      "https://images.unsplash.com/photo-1582719508461-905c673771fd"
-    ],
-    description: "Situé dans le quartier animé de Shinjuku, le Park Hyatt Tokyo offre une expérience de luxe unique avec une vue imprenable sur la ville et le Mont Fuji. Les chambres spacieuses allient élégance contemporaine et touches traditionnelles japonaises.",
-    amenities: ["Wifi", "Restaurant", "Parking", "Onsen", "Breakfast"],
-    cancellationPolicy: "Annulation gratuite jusqu'à 48h avant l'arrivée. Au-delà, le montant de la première nuit sera facturé."
   };
 
   return (
@@ -86,15 +76,17 @@ const Accommodation = () => {
             {/* Destination */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Destination</label>
-              <Select>
+              <Select onValueChange={setSelectedCity}>
                 <SelectTrigger>
                   <SelectValue placeholder="Choisissez votre destination" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tokyo">Tokyo</SelectItem>
-                  <SelectItem value="kyoto">Kyoto</SelectItem>
-                  <SelectItem value="osaka">Osaka</SelectItem>
-                  <SelectItem value="hiroshima">Hiroshima</SelectItem>
+                  <SelectItem value="TYO">Tokyo</SelectItem>
+                  <SelectItem value="OSA">Osaka</SelectItem>
+                  <SelectItem value="KIX">Kyoto</SelectItem>
+                  <SelectItem value="FUK">Fukuoka</SelectItem>
+                  <SelectItem value="CTS">Sapporo</SelectItem>
+                  <SelectItem value="NGO">Nagoya</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -182,17 +174,19 @@ const Accommodation = () => {
           </div>
         </div>
 
+        {/* Results Section */}
+        <div className="mt-8">
+          <h2 className="text-2xl font-bold text-secondary mb-4">Hébergements disponibles</h2>
+          <HotelResults 
+            hotels={filteredHotels || []} 
+            isLoading={isLoadingHotels} 
+          />
+        </div>
+
         {/* Map Section */}
         <div className="mt-8">
           <Map type="accommodations" />
         </div>
-
-        {/* Accommodation Details Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4">
-            <AccommodationDetail accommodation={sampleAccommodation} />
-          </div>
-        </section>
       </div>
     </div>
   );
