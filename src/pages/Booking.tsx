@@ -5,6 +5,7 @@ import { BookingForm } from "@/components/booking/BookingForm";
 import FlightResults from "@/components/booking/FlightResults";
 import { useAmadeusFlights } from "@/hooks/useAmadeus";
 import { format } from 'date-fns';
+import { supabase } from "@/integrations/supabase/client";
 
 const Booking = () => {
   const [departureDate, setDepartureDate] = useState<Date>();
@@ -27,7 +28,7 @@ const Booking = () => {
     japanAirports.includes(flight.itineraries[0].segments[flight.itineraries[0].segments.length - 1].arrival.iataCode)
   );
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!departureDate || !returnDate || !origin || !destination) {
       toast({
         variant: "destructive",
@@ -38,10 +39,37 @@ const Booking = () => {
     }
 
     setIsSearching(true);
-    toast({
-      title: "Recherche en cours",
-      description: "Nous recherchons les meilleurs vols pour vous",
-    });
+    
+    try {
+      // Sauvegarder la recherche dans l'historique
+      const { error } = await supabase
+        .from('search_history')
+        .insert({
+          search_type: 'flight',
+          search_params: {
+            origin,
+            destination,
+            departureDate: format(departureDate, 'yyyy-MM-dd'),
+            returnDate: format(returnDate, 'yyyy-MM-dd')
+          }
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Recherche en cours",
+        description: "Nous recherchons les meilleurs vols pour vous",
+      });
+    } catch (error) {
+      console.error('Error saving search history:', error);
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue lors de la recherche",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -51,12 +79,12 @@ const Booking = () => {
         <div className="absolute inset-0 bg-black/50" />
         <img
           src="https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
-          alt="Shinkansen"
+          alt="Avion"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 flex items-center justify-center">
           <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
-            Réservez votre voyage au Japon
+            Réservez votre vol pour le Japon
           </h1>
         </div>
       </div>

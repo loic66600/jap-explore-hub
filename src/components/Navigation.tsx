@@ -18,7 +18,7 @@ const Navigation = () => {
 
   const navItems = [
     { name: 'Villes', href: '/cities' },
-    { name: 'Réservation', href: '/booking' },
+    { name: 'Vol', href: '/booking' },
     { name: 'Hébergement', href: '/accommodation' },
     { name: 'Carte', href: '#map' },
     { name: 'Contact', href: '#contact' },
@@ -48,7 +48,7 @@ const Navigation = () => {
               </Link>
             ))}
             <Link to="/booking">
-              <Button variant="default">Réserver</Button>
+              <Button variant="default">Vol</Button>
             </Link>
           </div>
 
@@ -77,7 +77,7 @@ const Navigation = () => {
               ))}
               <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
                 <Button className="w-full" variant="default">
-                  Réserver
+                  Vol
                 </Button>
               </Link>
             </div>
