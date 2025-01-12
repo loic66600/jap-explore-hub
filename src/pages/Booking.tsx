@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import Map from "@/components/Map";
 import { BookingForm } from "@/components/booking/BookingForm";
@@ -6,6 +6,7 @@ import FlightResults from "@/components/booking/FlightResults";
 import { useAmadeusFlights } from "@/hooks/useAmadeus";
 import { format } from 'date-fns';
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from 'react-router-dom';
 
 const Booking = () => {
   const [departureDate, setDepartureDate] = useState<Date>();
@@ -13,7 +14,22 @@ const Booking = () => {
   const [origin, setOrigin] = useState<string>("");
   const [destination, setDestination] = useState<string>("");
   const [isSearching, setIsSearching] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+      setUser(user);
+    };
+    
+    checkUser();
+  }, [navigate]);
 
   const { data: flightsData, isLoading: isLoadingFlights } = useAmadeusFlights(
     origin,
@@ -38,6 +54,16 @@ const Booking = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez vous connecter pour effectuer une recherche",
+      });
+      navigate('/login');
+      return;
+    }
+
     setIsSearching(true);
     
     try {
@@ -45,6 +71,7 @@ const Booking = () => {
       const { error } = await supabase
         .from('search_history')
         .insert({
+          user_id: user.id,
           search_type: 'flight',
           search_params: {
             origin,
