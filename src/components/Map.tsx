@@ -6,6 +6,8 @@ interface MapProps {
   type: 'cities' | 'accommodations' | 'booking' | 'flight' | 'accommodation';
 }
 
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
+
 const Map = ({ type }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -14,7 +16,7 @@ const Map = ({ type }: MapProps) => {
     if (!mapContainer.current) return;
 
     // Initialize map
-    mapboxgl.accessToken = process.env.MAPBOX_TOKEN || '';
+    mapboxgl.accessToken = MAPBOX_TOKEN;
     
     map.current = new mapboxgl.Map({
       container: mapContainer.current,

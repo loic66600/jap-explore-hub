@@ -16,6 +16,14 @@ interface PlannerItem {
   details: string;
 }
 
+interface Itinerary {
+  id?: string;
+  user_id: string;
+  items: PlannerItem[];
+  total_budget: number;
+  created_at?: string;
+}
+
 const PlannerPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
