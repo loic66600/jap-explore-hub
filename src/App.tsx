@@ -8,6 +8,7 @@ import CitiesPage from "./pages/Cities";
 import Booking from "./pages/Booking";
 import Accommodation from "./pages/Accommodation";
 import CityDetail from "./pages/CityDetail";
+import PlannerPage from "./pages/PlannerPage";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/cities/:cityId" element={<CityDetail />} />
           <Route path="/booking" element={<Booking />} />
           <Route path="/accommodation" element={<Accommodation />} />
+          <Route path="/planner" element={<PlannerPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

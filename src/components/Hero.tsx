@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
+import { Plane, Map as MapIcon } from 'lucide-react';
 import FlightDetailsModal from './details/FlightDetailsModal';
 import AccommodationDetailsModal from './details/AccommodationDetailsModal';
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
   const [showFlightDetails, setShowFlightDetails] = useState(false);
   const [showAccommodationDetails, setShowAccommodationDetails] = useState(false);
@@ -131,18 +134,20 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               size="lg"
-              className="bg-primary hover:bg-primary/90 text-white"
-              onClick={() => setShowFlightDetails(true)}
+              className="bg-primary hover:bg-primary/90 text-white flex items-center gap-2"
+              onClick={() => navigate('/planner')}
             >
-              Voir les vols
+              <MapIcon className="w-5 h-5" />
+              Planifier Mon Voyage
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white/20"
-              onClick={() => setShowAccommodationDetails(true)}
+              className="bg-white/10 backdrop-blur-sm border-white text-white hover:bg-white/20 flex items-center gap-2"
+              onClick={() => setShowFlightDetails(true)}
             >
-              Voir les hébergements
+              <Plane className="w-5 h-5" />
+              Voir les vols
             </Button>
           </div>
         </div>
