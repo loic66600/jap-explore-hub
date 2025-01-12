@@ -1,57 +1,59 @@
+import { supabase } from '@/integrations/supabase/client';
+
 class AmadeusService {
-  private async makeRequest(endpoint: string, params?: Record<string, string>) {
-    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/amadeus`);
-    url.searchParams.append('endpoint', endpoint);
-    
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) url.searchParams.append(key, value);
+  private baseUrl: string;
+  private accessToken: string | null = null;
+
+  constructor() {
+    this.baseUrl = 'https://test.api.amadeus.com/v1';
+  }
+
+  private async authenticate(): Promise<string> {
+    try {
+      const { data, error } = await supabase.functions.invoke('amadeus', {
+        body: { action: 'authenticate' }
       });
+
+      if (error) throw error;
+      this.accessToken = data.access_token;
+      return this.accessToken;
+    } catch (error) {
+      console.error('Authentication error:', error);
+      throw error;
     }
+  }
 
-    const response = await fetch(url.toString(), {
-      headers: {
-        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Amadeus API error: ${response.statusText}`);
+  private async ensureValidToken(): Promise<string> {
+    if (!this.accessToken) {
+      return this.authenticate();
     }
-
-    return response.json();
+    return this.accessToken;
   }
 
-  async searchActivities(latitude: string, longitude: string) {
-    return this.makeRequest('/shopping/activities', {
-      latitude,
-      longitude,
-      radius: '20',
-    });
-  }
+  async searchFlights(params: {
+    originLocationCode: string;
+    destinationLocationCode: string;
+    departureDate: string;
+    adults?: number;
+    max?: number;
+  }) {
+    try {
+      const token = await this.ensureValidToken();
+      
+      const { data, error } = await supabase.functions.invoke('amadeus', {
+        body: {
+          action: 'searchFlights',
+          params: params
+        }
+      });
 
-  async searchHotels(cityCode: string, checkInDate: string, checkOutDate: string) {
-    return this.makeRequest('/shopping/hotel-offers', {
-      cityCode,
-      checkInDate,
-      checkOutDate,
-    });
-  }
-
-  async searchFlights(
-    originLocationCode: string,
-    destinationLocationCode: string,
-    departureDate: string,
-    adults: string = "1"
-  ) {
-    return this.makeRequest('/shopping/flight-offers', {
-      originLocationCode,
-      destinationLocationCode,
-      departureDate,
-      adults,
-      max: '10',
-    });
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Search flights error:', error);
+      throw error;
+    }
   }
 }
 
-export const amadeusService = new AmadeusService();
+export default new AmadeusService();

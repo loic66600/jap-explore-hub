@@ -1,55 +1,62 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+const AMADEUS_API_KEY = Deno.env.get('AMADEUS_API_KEY')
+const AMADEUS_API_SECRET = Deno.env.get('AMADEUS_API_SECRET')
+const AMADEUS_BASE_URL = 'https://test.api.amadeus.com/v1'
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const url = new URL(req.url)
-    const endpoint = url.searchParams.get('endpoint') || ''
-    const params = Object.fromEntries(url.searchParams)
-    delete params.endpoint
+    const { action, params } = await req.json()
 
-    // Get Amadeus token
-    const tokenResponse = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: Deno.env.get('AMADEUS_API_KEY') || '',
-        client_secret: Deno.env.get('AMADEUS_API_SECRET') || '',
-      }),
-    })
+    if (action === 'authenticate') {
+      const tokenResponse = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `grant_type=client_credentials&client_id=${AMADEUS_API_KEY}&client_secret=${AMADEUS_API_SECRET}`,
+      })
 
-    const { access_token } = await tokenResponse.json()
+      const tokenData = await tokenResponse.json()
+      return new Response(JSON.stringify(tokenData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
-    // Make request to Amadeus API
-    const apiResponse = await fetch(`https://test.api.amadeus.com/v1${endpoint}?${new URLSearchParams(params)}`, {
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-      },
-    })
+    if (action === 'searchFlights') {
+      const queryParams = new URLSearchParams({
+        originLocationCode: params.originLocationCode,
+        destinationLocationCode: params.destinationLocationCode,
+        departureDate: params.departureDate,
+        adults: (params.adults || 1).toString(),
+        max: (params.max || 10).toString(),
+      })
 
-    const data = await apiResponse.json()
-    console.log('Amadeus API response:', data)
+      const response = await fetch(`${AMADEUS_BASE_URL}/shopping/flight-offers?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+        },
+      })
 
-    return new Response(JSON.stringify(data), {
+      const data = await response.json()
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    return new Response(JSON.stringify({ error: 'Invalid action' }), {
+      status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error in Amadeus function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })
