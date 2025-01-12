@@ -16,6 +16,13 @@ interface PlannerItem {
   details: string;
 }
 
+interface Itinerary {
+  user_id: string;
+  items: PlannerItem[];
+  total_budget: number;
+  created_at?: string;
+}
+
 const PlannerPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -44,16 +51,16 @@ const PlannerPage = () => {
   const handleSaveItinerary = async () => {
     if (!session?.user) return;
 
+    const newItinerary: Itinerary = {
+      user_id: session.user.id,
+      items: selectedItems,
+      total_budget: calculateTotalBudget(),
+    };
+
     try {
       const { error } = await supabase
         .from('itineraries')
-        .insert([
-          {
-            user_id: session.user.id,
-            items: selectedItems,
-            total_budget: calculateTotalBudget(),
-          },
-        ]);
+        .insert([newItinerary]);
 
       if (error) throw error;
 

@@ -30,20 +30,25 @@ class AmadeusService {
     return this.accessToken;
   }
 
-  async searchFlights(params: {
-    originLocationCode: string;
-    destinationLocationCode: string;
-    departureDate: string;
-    adults?: number;
-    max?: number;
-  }) {
+  async searchFlights(
+    originLocationCode: string,
+    destinationLocationCode: string,
+    departureDate: string,
+    adults: string = "1"
+  ) {
     try {
       const token = await this.ensureValidToken();
       
       const { data, error } = await supabase.functions.invoke('amadeus', {
         body: {
           action: 'searchFlights',
-          params: params
+          params: {
+            originLocationCode,
+            destinationLocationCode,
+            departureDate,
+            adults,
+            token
+          }
         }
       });
 
@@ -54,6 +59,53 @@ class AmadeusService {
       throw error;
     }
   }
+
+  async searchHotels(cityCode: string, checkIn: string, checkOut: string) {
+    try {
+      const token = await this.ensureValidToken();
+      
+      const { data, error } = await supabase.functions.invoke('amadeus', {
+        body: {
+          action: 'searchHotels',
+          params: {
+            cityCode,
+            checkIn,
+            checkOut,
+            token
+          }
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Search hotels error:', error);
+      throw error;
+    }
+  }
+
+  async searchActivities(latitude: string, longitude: string) {
+    try {
+      const token = await this.ensureValidToken();
+      
+      const { data, error } = await supabase.functions.invoke('amadeus', {
+        body: {
+          action: 'searchActivities',
+          params: {
+            latitude,
+            longitude,
+            token
+          }
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Search activities error:', error);
+      throw error;
+    }
+  }
 }
 
-export default new AmadeusService();
+export const amadeusService = new AmadeusService();
