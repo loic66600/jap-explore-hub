@@ -1,8 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
-
 class AmadeusService {
   private async makeRequest(endpoint: string, params?: Record<string, string>) {
-    const url = new URL(`${supabase.supabaseUrl}/functions/v1/amadeus`);
+    const url = new URL(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/amadeus`);
     url.searchParams.append('endpoint', endpoint);
     
     if (params) {
@@ -13,7 +11,7 @@ class AmadeusService {
 
     const response = await fetch(url.toString(), {
       headers: {
-        'Authorization': `Bearer ${supabase.supabaseKey}`,
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
       },
     });
 

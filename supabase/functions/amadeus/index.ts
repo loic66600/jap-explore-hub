@@ -6,13 +6,14 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
     const url = new URL(req.url)
-    const endpoint = url.searchParams.get('endpoint')
+    const endpoint = url.searchParams.get('endpoint') || ''
     const params = Object.fromEntries(url.searchParams)
     delete params.endpoint
 
@@ -39,11 +40,13 @@ serve(async (req) => {
     })
 
     const data = await apiResponse.json()
+    console.log('Amadeus API response:', data)
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Error in Amadeus function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
