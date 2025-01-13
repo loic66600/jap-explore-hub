@@ -10,11 +10,11 @@ interface MapProps {
 
 // Coordonnées des principales villes japonaises
 const JAPAN_CITIES = [
-  { name: 'Tokyo', coordinates: [139.6917, 35.6895] },
-  { name: 'Osaka', coordinates: [135.5023, 34.6937] },
-  { name: 'Kyoto', coordinates: [135.7681, 35.0116] },
-  { name: 'Sapporo', coordinates: [141.3545, 43.0618] },
-  { name: 'Fukuoka', coordinates: [130.4017, 33.5902] }
+  { name: 'Tokyo', coordinates: [139.6917, 35.6895] as [number, number] },
+  { name: 'Osaka', coordinates: [135.5023, 34.6937] as [number, number] },
+  { name: 'Kyoto', coordinates: [135.7681, 35.0116] as [number, number] },
+  { name: 'Sapporo', coordinates: [141.3545, 43.0618] as [number, number] },
+  { name: 'Fukuoka', coordinates: [130.4017, 33.5902] as [number, number] }
 ];
 
 const Map = ({ type = 'cities' }: MapProps) => {
@@ -157,7 +157,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
   }, [type]);
 
   return (
-    <div className="relative w-full h-screen">
+    <div className="relative w-full h-[400px]"> {/* Changé de h-screen à h-[400px] */}
       <div ref={mapContainer} className="absolute inset-0 rounded-lg shadow-lg" />
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
     </div>
