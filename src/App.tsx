@@ -9,6 +9,7 @@ import Booking from "./pages/Booking";
 import Accommodation from "./pages/Accommodation";
 import CityDetail from "./pages/CityDetail";
 import PlannerPage from "./pages/PlannerPage";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ const App = () => (
           <Route path="/booking" element={<Booking />} />
           <Route path="/accommodation" element={<Accommodation />} />
           <Route path="/planner" element={<PlannerPage />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
