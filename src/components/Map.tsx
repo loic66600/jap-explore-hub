@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/components/ui/use-toast';
 
 interface MapProps {
   type?: 'cities' | 'planner' | 'accommodation' | 'flight' | 'accommodations' | 'booking';
@@ -10,6 +11,7 @@ interface MapProps {
 const Map = ({ type = 'cities' }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const animationFrameId = useRef<number | null>(null);
 
   useEffect(() => {
     const initializeMap = async () => {
@@ -21,18 +23,29 @@ const Map = ({ type = 'cities' }: MapProps) => {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
-        if (error) throw error;
+        if (error) {
+          toast({
+            title: 'Error',
+            description: 'Failed to initialize map. Please try again later.',
+            variant: 'destructive',
+          });
+          throw error;
+        }
         
         mapboxgl.accessToken = data.MAPBOX_PUBLIC_TOKEN;
         
-        map.current = new mapboxgl.Map({
+        // Initialize map with default options
+        const mapOptions: mapboxgl.MapOptions = {
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
           projection: 'globe',
           zoom: 1.5,
           center: [30, 15],
           pitch: 45,
-        });
+          minZoom: 1,
+        };
+
+        map.current = new mapboxgl.Map(mapOptions);
 
         // Add navigation controls
         map.current.addControl(
@@ -45,75 +58,88 @@ const Map = ({ type = 'cities' }: MapProps) => {
         // Disable scroll zoom for smoother experience
         map.current.scrollZoom.disable();
 
-        // Add atmosphere and fog effects
-        map.current.on('style.load', () => {
-          map.current?.setFog({
+        // Wait for map to load before adding effects and starting animation
+        map.current.on('load', () => {
+          if (!map.current) return;
+
+          map.current.setFog({
             color: 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
           });
-        });
 
-        // Rotation animation settings
-        const secondsPerRevolution = 240;
-        const maxSpinZoom = 5;
-        const slowSpinZoom = 3;
-        let userInteracting = false;
-        let spinEnabled = true;
-
-        // Spin globe function
-        function spinGlobe() {
-          if (!map.current) return;
-          
-          const zoom = map.current.getZoom();
-          if (spinEnabled && !userInteracting && zoom < maxSpinZoom) {
-            let distancePerSecond = 360 / secondsPerRevolution;
-            if (zoom > slowSpinZoom) {
-              const zoomDif = (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
-              distancePerSecond *= zoomDif;
-            }
-            const center = map.current.getCenter();
-            center.lng -= distancePerSecond;
-            map.current.easeTo({ center, duration: 1000, easing: (n) => n });
-          }
-        }
-
-        // Event listeners for interaction
-        map.current.on('mousedown', () => {
-          userInteracting = true;
+          startGlobeAnimation();
         });
-        
-        map.current.on('dragstart', () => {
-          userInteracting = true;
-        });
-        
-        map.current.on('mouseup', () => {
-          userInteracting = false;
-          spinGlobe();
-        });
-        
-        map.current.on('touchend', () => {
-          userInteracting = false;
-          spinGlobe();
-        });
-
-        map.current.on('moveend', () => {
-          spinGlobe();
-        });
-
-        // Start the globe spinning
-        spinGlobe();
 
       } catch (error) {
         console.error('Error initializing map:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to initialize map. Please try again later.',
+          variant: 'destructive',
+        });
       }
+    };
+
+    const startGlobeAnimation = () => {
+      if (!map.current) return;
+
+      const secondsPerRevolution = 240;
+      const maxSpinZoom = 5;
+      const slowSpinZoom = 3;
+      let userInteracting = false;
+      let spinEnabled = true;
+
+      // Spin globe function
+      const spinGlobe = () => {
+        if (!map.current || !spinEnabled || userInteracting) return;
+        
+        const zoom = map.current.getZoom();
+        if (zoom < maxSpinZoom) {
+          let distancePerSecond = 360 / secondsPerRevolution;
+          if (zoom > slowSpinZoom) {
+            const zoomDif = (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
+            distancePerSecond *= zoomDif;
+          }
+          const center = map.current.getCenter();
+          center.lng -= distancePerSecond;
+          map.current.easeTo({ center, duration: 1000, easing: (n) => n });
+        }
+        animationFrameId.current = requestAnimationFrame(spinGlobe);
+      };
+
+      // Event listeners for interaction
+      map.current.on('mousedown', () => {
+        userInteracting = true;
+      });
+      
+      map.current.on('dragstart', () => {
+        userInteracting = true;
+      });
+      
+      map.current.on('mouseup', () => {
+        userInteracting = false;
+      });
+      
+      map.current.on('touchend', () => {
+        userInteracting = false;
+      });
+
+      // Start the animation
+      spinGlobe();
     };
 
     initializeMap();
 
-    // Cleanup
+    // Cleanup function
     return () => {
-      map.current?.remove();
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current);
+      }
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
     };
   }, []);
 
