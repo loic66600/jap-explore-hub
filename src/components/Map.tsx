@@ -14,6 +14,8 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const animationFrameId = useRef<number | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeMap = async () => {
       if (!mapContainer.current) return;
 
@@ -23,14 +25,16 @@ const Map = ({ type = 'cities' }: MapProps) => {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
-        if (error) {
+        if (error || !data?.MAPBOX_PUBLIC_TOKEN) {
           toast({
             title: 'Error',
             description: 'Failed to initialize map. Please try again later.',
             variant: 'destructive',
           });
-          throw error;
+          throw error || new Error('No Mapbox token available');
         }
+        
+        if (!isMounted) return;
         
         mapboxgl.accessToken = data.MAPBOX_PUBLIC_TOKEN;
         
@@ -47,21 +51,22 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
         map.current = new mapboxgl.Map(mapOptions);
 
-        // Add navigation controls
-        map.current.addControl(
-          new mapboxgl.NavigationControl({
-            visualizePitch: true,
-          }),
-          'top-right'
-        );
-
-        // Disable scroll zoom for smoother experience
-        map.current.scrollZoom.disable();
-
-        // Wait for map to load before adding effects and starting animation
+        // Wait for map to load before adding controls and starting animation
         map.current.on('load', () => {
-          if (!map.current) return;
+          if (!map.current || !isMounted) return;
 
+          // Add navigation controls
+          map.current.addControl(
+            new mapboxgl.NavigationControl({
+              visualizePitch: true,
+            }),
+            'top-right'
+          );
+
+          // Disable scroll zoom for smoother experience
+          map.current.scrollZoom.disable();
+
+          // Add fog effect
           map.current.setFog({
             color: 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
@@ -73,16 +78,18 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
       } catch (error) {
         console.error('Error initializing map:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to initialize map. Please try again later.',
-          variant: 'destructive',
-        });
+        if (isMounted) {
+          toast({
+            title: 'Error',
+            description: 'Failed to initialize map. Please try again later.',
+            variant: 'destructive',
+          });
+        }
       }
     };
 
     const startGlobeAnimation = () => {
-      if (!map.current) return;
+      if (!map.current || !isMounted) return;
 
       const secondsPerRevolution = 240;
       const maxSpinZoom = 5;
@@ -133,6 +140,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
     // Cleanup function
     return () => {
+      isMounted = false;
       if (animationFrameId.current) {
         cancelAnimationFrame(animationFrameId.current);
       }

@@ -33,11 +33,51 @@ serve(async (req) => {
         originLocationCode: params.originLocationCode,
         destinationLocationCode: params.destinationLocationCode,
         departureDate: params.departureDate,
-        adults: (params.adults || 1).toString(),
-        max: (params.max || 10).toString(),
+        adults: params.adults || '1',
       })
 
       const response = await fetch(`${AMADEUS_BASE_URL}/shopping/flight-offers?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+        },
+      })
+
+      const data = await response.json()
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'searchHotels') {
+      console.log('Searching hotels with params:', params);
+      
+      const queryParams = new URLSearchParams({
+        cityCode: params.cityCode,
+        checkInDate: params.checkIn,
+        checkOutDate: params.checkOut,
+      })
+
+      const response = await fetch(`${AMADEUS_BASE_URL}/reference-data/locations/hotels/by-city?${queryParams}`, {
+        headers: {
+          'Authorization': `Bearer ${params.token}`,
+        },
+      })
+
+      const data = await response.json()
+      console.log('Hotel search response:', data);
+      
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'searchActivities') {
+      const queryParams = new URLSearchParams({
+        latitude: params.latitude,
+        longitude: params.longitude,
+      })
+
+      const response = await fetch(`${AMADEUS_BASE_URL}/shopping/activities?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${params.token}`,
         },
@@ -54,6 +94,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Error in Amadeus function:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
