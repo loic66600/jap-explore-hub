@@ -33,6 +33,30 @@ export type Database = {
         }
         Relationships: []
       }
+      itineraries: {
+        Row: {
+          created_at: string | null
+          id: string
+          items: Json
+          total_budget: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          items: Json
+          total_budget: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          items?: Json
+          total_budget?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       search_history: {
         Row: {
           created_at: string | null
