@@ -44,6 +44,14 @@ const cities = [
     description: "Un paradis naturel pour les amoureux de la nature et du ski.",
     highlights: ["Sapporo", "Parc national de Daisetsuzan", "Sources chaudes"],
     itinerary: "Hokkaido en 4 jours : Nature, ski et sources thermales."
+  },
+  {
+    id: 6,
+    name: "Hiroshima",
+    image: "https://images.unsplash.com/photo-1576675466969-38eeae4b41f6",
+    description: "Une ville symbole de paix et de résilience, riche en histoire.",
+    highlights: ["Dôme de Genbaku", "Île de Miyajima", "Parc du Mémorial de la Paix"],
+    itinerary: "Hiroshima en 2 jours : Sites historiques et île de Miyajima."
   }
 ];
 
