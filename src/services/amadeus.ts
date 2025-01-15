@@ -2,32 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 
 class AmadeusService {
   private baseUrl: string;
-  private accessToken: string | null = null;
 
   constructor() {
     this.baseUrl = 'https://test.api.amadeus.com/v1';
-  }
-
-  private async authenticate(): Promise<string> {
-    try {
-      const { data, error } = await supabase.functions.invoke('amadeus', {
-        body: { action: 'authenticate' }
-      });
-
-      if (error) throw error;
-      this.accessToken = data.access_token;
-      return this.accessToken;
-    } catch (error) {
-      console.error('Authentication error:', error);
-      throw error;
-    }
-  }
-
-  private async ensureValidToken(): Promise<string> {
-    if (!this.accessToken) {
-      return this.authenticate();
-    }
-    return this.accessToken;
   }
 
   async searchFlights(
@@ -37,7 +14,6 @@ class AmadeusService {
     adults: string = "1"
   ) {
     try {
-      const token = await this.ensureValidToken();
       console.log('Searching flights with params:', {
         originLocationCode,
         destinationLocationCode,
@@ -52,8 +28,7 @@ class AmadeusService {
             originLocationCode,
             destinationLocationCode,
             departureDate,
-            adults,
-            token
+            adults
           }
         }
       });
@@ -68,7 +43,6 @@ class AmadeusService {
 
   async searchHotels(cityCode: string, checkIn: string, checkOut: string) {
     try {
-      const token = await this.ensureValidToken();
       console.log('Searching hotels with params:', {
         cityCode,
         checkIn,
@@ -81,8 +55,7 @@ class AmadeusService {
           params: {
             cityCode,
             checkIn,
-            checkOut,
-            token
+            checkOut
           }
         }
       });
@@ -97,7 +70,6 @@ class AmadeusService {
 
   async searchActivities(latitude: string, longitude: string) {
     try {
-      const token = await this.ensureValidToken();
       console.log('Searching activities with params:', {
         latitude,
         longitude
@@ -108,8 +80,7 @@ class AmadeusService {
           action: 'searchActivities',
           params: {
             latitude,
-            longitude,
-            token
+            longitude
           }
         }
       });
