@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { Plane, Clock, Calendar } from "lucide-react";
+import { mockFlights } from "@/fixtures/flights";
 
 interface FlightResult {
   id: string;
@@ -32,7 +33,7 @@ interface FlightResultsProps {
   isLoading: boolean;
 }
 
-const FlightResults = ({ flights, isLoading }: FlightResultsProps) => {
+const FlightResults = ({ flights = mockFlights, isLoading }: FlightResultsProps) => {
   const handleBooking = (flightId: string) => {
     toast({
       title: "Réservation initiée",
