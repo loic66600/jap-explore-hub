@@ -1,11 +1,16 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { corsHeaders } from '../_shared/cors.ts'
 
 const AMADEUS_API_KEY = Deno.env.get('AMADEUS_API_KEY')
 const AMADEUS_API_SECRET = Deno.env.get('AMADEUS_API_SECRET')
 const AMADEUS_BASE_URL = 'https://test.api.amadeus.com/v1'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -22,6 +27,10 @@ serve(async (req) => {
         body: `grant_type=client_credentials&client_id=${AMADEUS_API_KEY}&client_secret=${AMADEUS_API_SECRET}`,
       })
 
+      if (!tokenResponse.ok) {
+        throw new Error(`Authentication failed: ${tokenResponse.statusText}`)
+      }
+
       const tokenData = await tokenResponse.json()
       return new Response(JSON.stringify(tokenData), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -34,8 +43,8 @@ serve(async (req) => {
         destinationLocationCode: params.destinationLocationCode,
         departureDate: params.departureDate,
         adults: params.adults || '1',
-        max: '20', // Limiter à 20 résultats
-        currencyCode: 'JPY' // Forcer la monnaie en Yen
+        max: '20',
+        currencyCode: 'JPY'
       })
 
       const response = await fetch(`${AMADEUS_BASE_URL}/shopping/flight-offers?${queryParams}`, {
@@ -43,6 +52,10 @@ serve(async (req) => {
           'Authorization': `Bearer ${params.token}`,
         },
       })
+
+      if (!response.ok) {
+        throw new Error(`Flight search failed: ${response.statusText}`)
+      }
 
       const data = await response.json()
       console.log('Flight search response:', data)
@@ -55,7 +68,6 @@ serve(async (req) => {
     if (action === 'searchHotels') {
       console.log('Searching hotels with params:', params)
       
-      // D'abord, rechercher les hôtels par ville
       const hotelsResponse = await fetch(
         `${AMADEUS_BASE_URL}/reference-data/locations/hotels/by-city?cityCode=${params.cityCode}`, 
         {
@@ -65,14 +77,16 @@ serve(async (req) => {
         }
       )
 
+      if (!hotelsResponse.ok) {
+        throw new Error(`Hotel search failed: ${hotelsResponse.statusText}`)
+      }
+
       const hotelsData = await hotelsResponse.json()
       console.log('Hotels by city response:', hotelsData)
 
       if (hotelsData.data && hotelsData.data.length > 0) {
-        // Prendre les 10 premiers hôtels pour les offres
         const hotelIds = hotelsData.data.slice(0, 10).map((hotel: any) => hotel.hotelId)
 
-        // Rechercher les offres pour ces hôtels
         const offersResponse = await fetch(
           `${AMADEUS_BASE_URL}/shopping/hotel-offers?hotelIds=${hotelIds.join(',')}&checkInDate=${params.checkIn}&checkOutDate=${params.checkOut}&currency=JPY&roomQuantity=1`,
           {
@@ -81,6 +95,10 @@ serve(async (req) => {
             },
           }
         )
+
+        if (!offersResponse.ok) {
+          throw new Error(`Hotel offers search failed: ${offersResponse.statusText}`)
+        }
 
         const offersData = await offersResponse.json()
         console.log('Hotel offers response:', offersData)
@@ -106,6 +124,10 @@ serve(async (req) => {
           },
         }
       )
+
+      if (!response.ok) {
+        throw new Error(`Activities search failed: ${response.statusText}`)
+      }
 
       const data = await response.json()
       console.log('Activities search response:', data)
