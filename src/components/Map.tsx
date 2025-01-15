@@ -25,6 +25,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const animationFrameId = useRef<number | null>(null);
   const [hotels, setHotels] = useState<any[]>([]);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -33,39 +34,40 @@ const Map = ({ type = 'cities' }: MapProps) => {
       if (!mapContainer.current) return;
 
       try {
-        const { data, error } = await supabase.functions.invoke('get-secrets', {
+        // First try to get the token
+        const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
-        if (error || !data?.MAPBOX_PUBLIC_TOKEN) {
-          toast({
-            title: 'Erreur',
-            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
-            variant: 'destructive',
-          });
-          throw error || new Error('Pas de token Mapbox disponible');
+        if (secretError) {
+          console.error('Error fetching Mapbox token:', secretError);
+          throw new Error('Failed to fetch Mapbox token');
         }
-        
+
+        if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
+          throw new Error('Mapbox token not found');
+        }
+
         if (!isMounted) return;
-        
-        mapboxgl.accessToken = data.MAPBOX_PUBLIC_TOKEN;
-        
-        // Initialiser la carte centrée sur le Japon
+
+        setMapboxToken(secretData.MAPBOX_PUBLIC_TOKEN);
+        mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+
+        // Initialize the map
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
           projection: 'globe',
           zoom: 4.5,
-          center: [138.2529, 36.2048], // Centre du Japon
+          center: [138.2529, 36.2048],
           pitch: 45,
           minZoom: 3,
         });
 
-        // Attendre le chargement de la carte
+        // Wait for map to load
         map.current.on('load', () => {
           if (!map.current || !isMounted) return;
 
-          // Ajouter les contrôles de navigation
           map.current.addControl(
             new mapboxgl.NavigationControl({
               visualizePitch: true,
@@ -73,55 +75,57 @@ const Map = ({ type = 'cities' }: MapProps) => {
             'top-right'
           );
 
-          // Désactiver le zoom par scroll pour une meilleure expérience
           map.current.scrollZoom.disable();
 
-          // Ajouter l'effet de brouillard
           map.current.setFog({
             color: 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
           });
 
-          // Ajouter les marqueurs pour les villes
+          // Add markers for cities
           JAPAN_CITIES.forEach(city => {
+            if (!map.current) return;
             const marker = new mapboxgl.Marker()
               .setLngLat(city.coordinates)
               .setPopup(new mapboxgl.Popup().setHTML(`<h3>${city.name}</h3>`))
-              .addTo(map.current!);
+              .addTo(map.current);
             markers.current.push(marker);
           });
 
-          // Si le type est 'accommodation' ou 'booking', charger les hôtels
+          // Load hotels if needed
           if (type === 'accommodation' || type === 'booking') {
             fetchHotels();
           }
         });
 
       } catch (error) {
-        console.error('Erreur d\'initialisation de la carte:', error);
-        if (isMounted) {
-          toast({
-            title: 'Erreur',
-            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
-            variant: 'destructive',
-          });
-        }
+        console.error('Map initialization error:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
+          variant: 'destructive',
+        });
       }
     };
 
     const fetchHotels = async () => {
       try {
-        const { data: hotelsData } = await supabase.functions.invoke('amadeus', {
+        const { data: hotelsData, error: hotelsError } = await supabase.functions.invoke('amadeus', {
           body: {
             action: 'searchHotels',
             params: {
-              cityCode: 'TYO', // Tokyo
+              cityCode: 'TYO',
               checkIn: '2024-02-01',
               checkOut: '2024-02-05'
             }
           }
         });
+
+        if (hotelsError) {
+          console.error('Error fetching hotels:', hotelsError);
+          return;
+        }
 
         if (hotelsData?.data && map.current) {
           setHotels(hotelsData.data);
@@ -139,13 +143,17 @@ const Map = ({ type = 'cities' }: MapProps) => {
           });
         }
       } catch (error) {
-        console.error('Erreur lors du chargement des hôtels:', error);
+        console.error('Error loading hotels:', error);
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de charger les hôtels. Veuillez réessayer plus tard.',
+          variant: 'destructive',
+        });
       }
     };
 
     initializeMap();
 
-    // Nettoyage
     return () => {
       isMounted = false;
       if (animationFrameId.current) {
@@ -159,6 +167,14 @@ const Map = ({ type = 'cities' }: MapProps) => {
       }
     };
   }, [type]);
+
+  if (!mapboxToken) {
+    return (
+      <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+        <p className="text-gray-500">Chargement de la carte...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-[400px]">
