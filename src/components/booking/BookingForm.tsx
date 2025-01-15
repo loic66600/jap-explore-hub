@@ -12,6 +12,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { fr } from 'date-fns/locale';
+import { useToast } from "@/components/ui/use-toast";
 
 interface BookingFormProps {
   onSearch: () => void;
@@ -34,13 +35,39 @@ export const BookingForm = ({
   setOrigin,
   setDestination,
 }: BookingFormProps) => {
+  const { toast } = useToast();
+  const [selectedOrigin, setSelectedOrigin] = useState<string>("");
+  const [selectedDestination, setSelectedDestination] = useState<string>("");
+
+  const handleOriginChange = (value: string) => {
+    setSelectedOrigin(value);
+    setOrigin(value);
+  };
+
+  const handleDestinationChange = (value: string) => {
+    setSelectedDestination(value);
+    setDestination(value);
+  };
+
+  const handleSearch = () => {
+    if (!selectedOrigin || !selectedDestination || !departureDate || !returnDate) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Veuillez remplir tous les champs obligatoires",
+      });
+      return;
+    }
+    onSearch();
+  };
+
   return (
     <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6 -mt-20 relative z-10">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Departure City */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Ville de départ</label>
-          <Select onValueChange={setOrigin}>
+          <Select onValueChange={handleOriginChange} value={selectedOrigin}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionnez votre ville" />
             </SelectTrigger>
@@ -56,7 +83,7 @@ export const BookingForm = ({
         {/* Destination */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Destination</label>
-          <Select onValueChange={setDestination}>
+          <Select onValueChange={handleDestinationChange} value={selectedDestination}>
             <SelectTrigger>
               <SelectValue placeholder="Choisissez votre destination" />
             </SelectTrigger>
@@ -133,7 +160,7 @@ export const BookingForm = ({
         <Button
           size="lg"
           className="w-full md:w-auto min-w-[200px] animate-fade-up"
-          onClick={onSearch}
+          onClick={handleSearch}
           disabled={isSearching}
         >
           {isSearching ? "Recherche en cours..." : "Rechercher"}

@@ -10,20 +10,29 @@ const corsHeaders = {
 }
 
 async function getAmadeusToken() {
-  const tokenResponse = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `grant_type=client_credentials&client_id=${AMADEUS_API_KEY}&client_secret=${AMADEUS_API_SECRET}`,
-  })
+  try {
+    console.log('Getting Amadeus token...')
+    const tokenResponse = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `grant_type=client_credentials&client_id=${AMADEUS_API_KEY}&client_secret=${AMADEUS_API_SECRET}`,
+    })
 
-  if (!tokenResponse.ok) {
-    throw new Error(`Authentication failed: ${tokenResponse.statusText}`)
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text()
+      console.error('Token request failed:', tokenResponse.status, errorText)
+      throw new Error(`Authentication failed: ${tokenResponse.statusText}`)
+    }
+
+    const tokenData = await tokenResponse.json()
+    console.log('Successfully obtained Amadeus token')
+    return tokenData.access_token
+  } catch (error) {
+    console.error('Error getting Amadeus token:', error)
+    throw error
   }
-
-  const tokenData = await tokenResponse.json()
-  return tokenData.access_token
 }
 
 serve(async (req) => {
@@ -34,18 +43,22 @@ serve(async (req) => {
 
   try {
     const { action, params } = await req.json()
+    console.log('Received request:', { action, params })
+
+    // Validate required environment variables
+    if (!AMADEUS_API_KEY || !AMADEUS_API_SECRET) {
+      throw new Error('Missing Amadeus API credentials')
+    }
 
     // Get a fresh token for each request
     const token = await getAmadeusToken()
-    console.log('Successfully obtained Amadeus token')
-
-    if (action === 'authenticate') {
-      return new Response(JSON.stringify({ access_token: token }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
 
     if (action === 'searchFlights') {
+      // Validate required parameters
+      if (!params.originLocationCode || !params.destinationLocationCode || !params.departureDate) {
+        throw new Error('Missing required flight search parameters')
+      }
+
       console.log('Searching flights with params:', params)
       
       const queryParams = new URLSearchParams({
@@ -54,7 +67,7 @@ serve(async (req) => {
         departureDate: params.departureDate,
         adults: params.adults || '1',
         max: '20',
-        currencyCode: 'JPY'
+        currencyCode: 'EUR'
       })
 
       const response = await fetch(`${AMADEUS_BASE_URL}/shopping/flight-offers?${queryParams}`, {
@@ -64,12 +77,13 @@ serve(async (req) => {
       })
 
       if (!response.ok) {
-        console.error('Flight search failed:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('Flight search failed:', response.status, errorText)
         throw new Error(`Flight search failed: ${response.statusText}`)
       }
 
       const data = await response.json()
-      console.log('Flight search response:', data)
+      console.log('Flight search successful')
       
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -157,9 +171,14 @@ serve(async (req) => {
     })
   } catch (error) {
     console.error('Error in Amadeus function:', error)
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    )
   }
 })
