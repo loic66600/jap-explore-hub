@@ -48,7 +48,10 @@ serve(async (req) => {
     // Validate required environment variables
     if (!Deno.env.get('AMADEUS_API_KEY') || !Deno.env.get('AMADEUS_API_SECRET')) {
       console.error('Missing Amadeus API credentials')
-      throw new Error('Missing Amadeus API credentials')
+      return new Response(
+        JSON.stringify({ error: 'Missing Amadeus API credentials' }), 
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
     }
 
     // Get a fresh token for each request
@@ -56,9 +59,19 @@ serve(async (req) => {
 
     if (action === 'searchFlights') {
       // Validate required parameters
-      if (!params.originLocationCode || !params.destinationLocationCode || !params.departureDate) {
+      if (!params?.originLocationCode || !params?.destinationLocationCode || !params?.departureDate) {
         console.error('Missing required parameters:', params)
-        throw new Error('Missing required flight search parameters')
+        return new Response(
+          JSON.stringify({ 
+            error: 'Missing required flight search parameters',
+            missingParams: {
+              originLocationCode: !params?.originLocationCode,
+              destinationLocationCode: !params?.destinationLocationCode,
+              departureDate: !params?.departureDate
+            }
+          }), 
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
       }
 
       console.log('Searching flights with params:', params)
@@ -81,39 +94,16 @@ serve(async (req) => {
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Flight search failed:', response.status, errorText)
-        throw new Error(`Flight search failed: ${response.statusText}`)
+        return new Response(
+          JSON.stringify({ error: `Flight search failed: ${response.statusText}`, details: errorText }), 
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
+        )
       }
 
       const data = await response.json()
       console.log('Flight search successful')
       
       return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      })
-    }
-
-    if (action === 'searchHotels') {
-      console.log('Searching hotels with params:', params)
-      
-      const hotelsResponse = await fetch(
-        `https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?cityCode=${params.cityCode}`, 
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        }
-      )
-
-      if (!hotelsResponse.ok) {
-        console.error('Hotel search failed:', hotelsResponse.status, hotelsResponse.statusText)
-        throw new Error(`Hotel search failed: ${hotelsResponse.statusText}`)
-      }
-
-      const hotelsData = await hotelsResponse.json()
-      console.log('Hotels search successful')
-
-      return new Response(JSON.stringify(hotelsData), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       })

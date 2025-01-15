@@ -57,6 +57,20 @@ export const BookingForm = ({
       });
       return;
     }
+
+    // Format the date to YYYY-MM-DD as required by Amadeus API
+    const formattedDepartureDate = departureDate.toISOString().split('T')[0];
+    
+    // Validate the formatted date
+    if (!formattedDepartureDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Format de date invalide",
+      });
+      return;
+    }
+
     onSearch();
   };
 
