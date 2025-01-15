@@ -1,6 +1,6 @@
 export const mockFlights = [
   {
-    id: "FL001",
+    id: "1",
     itineraries: [
       {
         duration: "12H30",
@@ -28,7 +28,7 @@ export const mockFlights = [
     },
   },
   {
-    id: "FL002",
+    id: "2",
     itineraries: [
       {
         duration: "13H45",
@@ -37,12 +37,12 @@ export const mockFlights = [
             departure: {
               iataCode: "CDG",
               terminal: "1",
-              at: "2024-04-01T13:15:00",
+              at: "2024-04-01T13:30:00",
             },
             arrival: {
               iataCode: "NRT",
               terminal: "2",
-              at: "2024-04-02T09:00:00",
+              at: "2024-04-02T09:15:00",
             },
             carrierCode: "JL",
             number: "416",

@@ -9,10 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 import { fr } from 'date-fns/locale';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 interface BookingFormProps {
   onSearch: () => void;
@@ -38,6 +36,7 @@ export const BookingForm = ({
   const { toast } = useToast();
   const [selectedOrigin, setSelectedOrigin] = useState<string>("");
   const [selectedDestination, setSelectedDestination] = useState<string>("");
+  const [adults, setAdults] = useState<number>(1);
 
   const handleOriginChange = (value: string) => {
     setSelectedOrigin(value);
@@ -50,11 +49,11 @@ export const BookingForm = ({
   };
 
   const handleSearch = () => {
-    if (!selectedOrigin || !selectedDestination || !departureDate || !returnDate) {
+    if (!selectedOrigin || !selectedDestination || !departureDate) {
       toast({
         variant: "destructive",
         title: "Erreur",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Veuillez remplir tous les champs obligatoires (ville de départ, destination et date de départ)",
       });
       return;
     }
@@ -125,7 +124,12 @@ export const BookingForm = ({
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-gray-500">Adultes</label>
-              <Input type="number" min="1" defaultValue="1" />
+              <Input 
+                type="number" 
+                min="1" 
+                value={adults}
+                onChange={(e) => setAdults(Math.max(1, parseInt(e.target.value) || 1))}
+              />
             </div>
             <div>
               <label className="text-xs text-gray-500">Enfants</label>
@@ -141,7 +145,7 @@ export const BookingForm = ({
         {/* Travel Class */}
         <div className="space-y-2">
           <label className="text-sm font-medium">Classe de voyage</label>
-          <Select>
+          <Select defaultValue="ECONOMY">
             <SelectTrigger>
               <SelectValue placeholder="Choisissez votre classe" />
             </SelectTrigger>

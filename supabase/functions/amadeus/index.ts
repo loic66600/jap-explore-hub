@@ -38,7 +38,7 @@ async function getAmadeusToken() {
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
@@ -56,6 +56,7 @@ serve(async (req) => {
     if (action === 'searchFlights') {
       // Validate required parameters
       if (!params.originLocationCode || !params.destinationLocationCode || !params.departureDate) {
+        console.error('Missing required parameters:', params)
         throw new Error('Missing required flight search parameters')
       }
 
