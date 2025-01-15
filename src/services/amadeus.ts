@@ -94,6 +94,33 @@ class AmadeusService {
       throw error;
     }
   }
+
+  async searchActivities(latitude: string, longitude: string) {
+    try {
+      const token = await this.ensureValidToken();
+      console.log('Searching activities with params:', {
+        latitude,
+        longitude
+      });
+      
+      const { data, error } = await supabase.functions.invoke('amadeus', {
+        body: {
+          action: 'searchActivities',
+          params: {
+            latitude,
+            longitude,
+            token
+          }
+        }
+      });
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Search activities error:', error);
+      throw error;
+    }
+  }
 }
 
 export const amadeusService = new AmadeusService();

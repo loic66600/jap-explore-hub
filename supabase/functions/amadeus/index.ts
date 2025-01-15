@@ -95,6 +95,26 @@ serve(async (req) => {
       })
     }
 
+    if (action === 'searchActivities') {
+      console.log('Searching activities with params:', params)
+      
+      const response = await fetch(
+        `${AMADEUS_BASE_URL}/shopping/activities?latitude=${params.latitude}&longitude=${params.longitude}&radius=20`, 
+        {
+          headers: {
+            'Authorization': `Bearer ${params.token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+      console.log('Activities search response:', data)
+      
+      return new Response(JSON.stringify(data), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     return new Response(JSON.stringify({ error: 'Invalid action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
