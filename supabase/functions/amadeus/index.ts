@@ -34,6 +34,8 @@ serve(async (req) => {
         destinationLocationCode: params.destinationLocationCode,
         departureDate: params.departureDate,
         adults: params.adults || '1',
+        max: '20', // Limiter à 20 résultats
+        currencyCode: 'JPY' // Forcer la monnaie en Yen
       })
 
       const response = await fetch(`${AMADEUS_BASE_URL}/shopping/flight-offers?${queryParams}`, {
@@ -43,48 +45,52 @@ serve(async (req) => {
       })
 
       const data = await response.json()
+      console.log('Flight search response:', data)
+      
       return new Response(JSON.stringify(data), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     if (action === 'searchHotels') {
-      console.log('Searching hotels with params:', params);
+      console.log('Searching hotels with params:', params)
       
-      const queryParams = new URLSearchParams({
-        cityCode: params.cityCode,
-        checkInDate: params.checkIn,
-        checkOutDate: params.checkOut,
-      })
+      // D'abord, rechercher les hôtels par ville
+      const hotelsResponse = await fetch(
+        `${AMADEUS_BASE_URL}/reference-data/locations/hotels/by-city?cityCode=${params.cityCode}`, 
+        {
+          headers: {
+            'Authorization': `Bearer ${params.token}`,
+          },
+        }
+      )
 
-      const response = await fetch(`${AMADEUS_BASE_URL}/reference-data/locations/hotels/by-city?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${params.token}`,
-        },
-      })
+      const hotelsData = await hotelsResponse.json()
+      console.log('Hotels by city response:', hotelsData)
 
-      const data = await response.json()
-      console.log('Hotel search response:', data);
-      
-      return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+      if (hotelsData.data && hotelsData.data.length > 0) {
+        // Prendre les 10 premiers hôtels pour les offres
+        const hotelIds = hotelsData.data.slice(0, 10).map((hotel: any) => hotel.hotelId)
 
-    if (action === 'searchActivities') {
-      const queryParams = new URLSearchParams({
-        latitude: params.latitude,
-        longitude: params.longitude,
-      })
+        // Rechercher les offres pour ces hôtels
+        const offersResponse = await fetch(
+          `${AMADEUS_BASE_URL}/shopping/hotel-offers?hotelIds=${hotelIds.join(',')}&checkInDate=${params.checkIn}&checkOutDate=${params.checkOut}&currency=JPY&roomQuantity=1`,
+          {
+            headers: {
+              'Authorization': `Bearer ${params.token}`,
+            },
+          }
+        )
 
-      const response = await fetch(`${AMADEUS_BASE_URL}/shopping/activities?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${params.token}`,
-        },
-      })
+        const offersData = await offersResponse.json()
+        console.log('Hotel offers response:', offersData)
 
-      const data = await response.json()
-      return new Response(JSON.stringify(data), {
+        return new Response(JSON.stringify(offersData), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      return new Response(JSON.stringify({ data: [] }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
@@ -94,7 +100,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    console.error('Error in Amadeus function:', error);
+    console.error('Error in Amadeus function:', error)
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -123,17 +123,19 @@ const Map = ({ type = 'cities' }: MapProps) => {
           }
         });
 
-        if (hotelsData && map.current) {
-          setHotels(hotelsData);
-          hotelsData.forEach((hotel: any) => {
-            const marker = new mapboxgl.Marker({ color: '#FF0000' })
-              .setLngLat([hotel.longitude, hotel.latitude])
-              .setPopup(new mapboxgl.Popup().setHTML(`
-                <h3>${hotel.name}</h3>
-                <p>${hotel.address}</p>
-              `))
-              .addTo(map.current!);
-            markers.current.push(marker);
+        if (hotelsData?.data && map.current) {
+          setHotels(hotelsData.data);
+          hotelsData.data.forEach((hotel: any) => {
+            if (hotel.hotel && hotel.hotel.latitude && hotel.hotel.longitude) {
+              const marker = new mapboxgl.Marker({ color: '#FF0000' })
+                .setLngLat([hotel.hotel.longitude, hotel.hotel.latitude])
+                .setPopup(new mapboxgl.Popup().setHTML(`
+                  <h3>${hotel.hotel.name}</h3>
+                  <p>${hotel.hotel.address?.cityName || ''}</p>
+                `))
+                .addTo(map.current!);
+              markers.current.push(marker);
+            }
           });
         }
       } catch (error) {
@@ -159,7 +161,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
   }, [type]);
 
   return (
-    <div className="relative w-full h-[400px]"> {/* Changé de h-screen à h-[400px] */}
+    <div className="relative w-full h-[400px]">
       <div ref={mapContainer} className="absolute inset-0 rounded-lg shadow-lg" />
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
     </div>

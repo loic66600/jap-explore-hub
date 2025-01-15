@@ -38,6 +38,12 @@ class AmadeusService {
   ) {
     try {
       const token = await this.ensureValidToken();
+      console.log('Searching flights with params:', {
+        originLocationCode,
+        destinationLocationCode,
+        departureDate,
+        adults
+      });
       
       const { data, error } = await supabase.functions.invoke('amadeus', {
         body: {
@@ -63,6 +69,11 @@ class AmadeusService {
   async searchHotels(cityCode: string, checkIn: string, checkOut: string) {
     try {
       const token = await this.ensureValidToken();
+      console.log('Searching hotels with params:', {
+        cityCode,
+        checkIn,
+        checkOut
+      });
       
       const { data, error } = await supabase.functions.invoke('amadeus', {
         body: {
@@ -80,29 +91,6 @@ class AmadeusService {
       return data;
     } catch (error) {
       console.error('Search hotels error:', error);
-      throw error;
-    }
-  }
-
-  async searchActivities(latitude: string, longitude: string) {
-    try {
-      const token = await this.ensureValidToken();
-      
-      const { data, error } = await supabase.functions.invoke('amadeus', {
-        body: {
-          action: 'searchActivities',
-          params: {
-            latitude,
-            longitude,
-            token
-          }
-        }
-      });
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Search activities error:', error);
       throw error;
     }
   }
