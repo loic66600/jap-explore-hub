@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { fr } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
+import { format } from 'date-fns';
 
 interface BookingFormProps {
   onSearch: () => void;
@@ -59,7 +60,7 @@ export const BookingForm = ({
     }
 
     // Format the date to YYYY-MM-DD as required by Amadeus API
-    const formattedDepartureDate = departureDate.toISOString().split('T')[0];
+    const formattedDepartureDate = format(departureDate, 'yyyy-MM-dd');
     
     // Validate the formatted date
     if (!formattedDepartureDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
@@ -70,6 +71,12 @@ export const BookingForm = ({
       });
       return;
     }
+
+    console.log('Search parameters:', {
+      origin: selectedOrigin,
+      destination: selectedDestination,
+      departureDate: formattedDepartureDate
+    });
 
     onSearch();
   };
