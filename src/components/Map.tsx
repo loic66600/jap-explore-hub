@@ -26,6 +26,8 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const animationFrameId = useRef<number | null>(null);
   const [hotels, setHotels] = useState<any[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -34,7 +36,9 @@ const Map = ({ type = 'cities' }: MapProps) => {
       if (!mapContainer.current) return;
 
       try {
-        // First try to get the token
+        setIsLoading(true);
+        console.log('Fetching Mapbox token...');
+        
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
@@ -45,15 +49,19 @@ const Map = ({ type = 'cities' }: MapProps) => {
         }
 
         if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
+          console.error('Mapbox token not found in response:', secretData);
           throw new Error('Mapbox token not found');
         }
+
+        console.log('Mapbox token received successfully');
 
         if (!isMounted) return;
 
         setMapboxToken(secretData.MAPBOX_PUBLIC_TOKEN);
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
-        // Initialize the map
+        console.log('Initializing map...');
+        
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
@@ -64,9 +72,9 @@ const Map = ({ type = 'cities' }: MapProps) => {
           minZoom: 3,
         });
 
-        // Wait for map to load
         map.current.on('load', () => {
           if (!map.current || !isMounted) return;
+          console.log('Map loaded successfully');
 
           map.current.addControl(
             new mapboxgl.NavigationControl({
@@ -93,14 +101,24 @@ const Map = ({ type = 'cities' }: MapProps) => {
             markers.current.push(marker);
           });
 
+          setIsLoading(false);
+
           // Load hotels if needed
           if (type === 'accommodation' || type === 'booking') {
             fetchHotels();
           }
         });
 
+        map.current.on('error', (e) => {
+          console.error('Mapbox error:', e);
+          setError('Une erreur est survenue lors du chargement de la carte');
+          setIsLoading(false);
+        });
+
       } catch (error) {
         console.error('Map initialization error:', error);
+        setError('Impossible d\'initialiser la carte');
+        setIsLoading(false);
         toast({
           title: 'Erreur',
           description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
@@ -168,7 +186,15 @@ const Map = ({ type = 'cities' }: MapProps) => {
     };
   }, [type]);
 
-  if (!mapboxToken) {
+  if (error) {
+    return (
+      <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (isLoading || !mapboxToken) {
     return (
       <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
         <p className="text-gray-500">Chargement de la carte...</p>
