@@ -18,6 +18,14 @@ export const mockFlights = [
             },
             carrierCode: "AF",
             number: "276",
+            aircraft: {
+              code: "789",
+              name: "Boeing 787-9"
+            },
+            operating: {
+              carrierCode: "AF",
+              name: "Air France"
+            }
           },
         ],
       },
@@ -26,6 +34,12 @@ export const mockFlights = [
       total: "850.00",
       currency: "EUR",
     },
+    additionalInfo: {
+      meal: "Repas inclus",
+      baggage: "2 bagages en soute inclus",
+      class: "Économique Premium",
+      seatsAvailable: 12
+    }
   },
   {
     id: "2",
@@ -46,6 +60,14 @@ export const mockFlights = [
             },
             carrierCode: "JL",
             number: "416",
+            aircraft: {
+              code: "773",
+              name: "Boeing 777-300ER"
+            },
+            operating: {
+              carrierCode: "JL",
+              name: "Japan Airlines"
+            }
           },
         ],
       },
@@ -54,5 +76,53 @@ export const mockFlights = [
       total: "920.00",
       currency: "EUR",
     },
+    additionalInfo: {
+      meal: "Repas japonais traditionnel",
+      baggage: "2 bagages en soute inclus",
+      class: "Business",
+      seatsAvailable: 8
+    }
   },
+  {
+    id: "3",
+    itineraries: [
+      {
+        duration: "14H20",
+        segments: [
+          {
+            departure: {
+              iataCode: "CDG",
+              terminal: "1",
+              at: "2024-04-01T15:45:00",
+            },
+            arrival: {
+              iataCode: "KIX",
+              terminal: "1",
+              at: "2024-04-02T12:05:00",
+            },
+            carrierCode: "NH",
+            number: "216",
+            aircraft: {
+              code: "789",
+              name: "Boeing 787-9"
+            },
+            operating: {
+              carrierCode: "NH",
+              name: "ANA"
+            }
+          },
+        ],
+      },
+    ],
+    price: {
+      total: "780.00",
+      currency: "EUR",
+    },
+    additionalInfo: {
+      meal: "Menu international",
+      baggage: "1 bagage en soute inclus",
+      class: "Économique",
+      seatsAvailable: 25
+    }
+  }
 ];
