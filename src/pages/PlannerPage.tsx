@@ -24,15 +24,28 @@ const PlannerPage = () => {
   const [selectedTab, setSelectedTab] = useState("flights");
 
   const calculateTotalBudget = () => {
-    // Logique pour calculer le budget total
     return budget;
   };
 
   const saveItinerary = async (itinerary: Omit<Itinerary, 'id' | 'created_at'>) => {
     try {
+      // Get the current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        throw new Error('You must be logged in to save an itinerary');
+      }
+
+      if (!user) {
+        throw new Error('No authenticated user found');
+      }
+
       const { data, error } = await supabase
         .from('itineraries')
-        .insert([itinerary]);
+        .insert([{
+          ...itinerary,
+          user_id: user.id // Use the actual user ID
+        }]);
 
       if (error) throw error;
 
@@ -42,10 +55,10 @@ const PlannerPage = () => {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Erreur',
-        description: 'Échec de la sauvegarde de l\'itinéraire',
+        description: error.message || 'Échec de la sauvegarde de l\'itinéraire',
         variant: 'destructive',
       });
       console.error('Erreur lors de la sauvegarde de l\'itinéraire:', error);
@@ -53,7 +66,6 @@ const PlannerPage = () => {
   };
 
   const shareItinerary = () => {
-    // Logique pour partager l'itinéraire
     toast({
       title: 'Partage',
       description: 'Fonctionnalité de partage en cours de développement',
@@ -77,7 +89,7 @@ const PlannerPage = () => {
             </Button>
             <Button
               onClick={() => saveItinerary({
-                user_id: 'user_id',
+                user_id: '', // This will be set in the saveItinerary function
                 items: [],
                 total_budget: calculateTotalBudget()
               })}
