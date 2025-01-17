@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { Building, Star, MapPin } from "lucide-react";
+import { Building, Star, MapPin, Wifi, Coffee, Bath, Car } from "lucide-react";
+import { mockAccommodations } from "@/fixtures/accommodations";
 
 interface HotelOffer {
   id: string;
@@ -32,7 +33,7 @@ interface HotelOffer {
 }
 
 interface HotelResultsProps {
-  hotels: HotelOffer[];
+  hotels?: HotelOffer[];
   isLoading: boolean;
 }
 
@@ -52,78 +53,76 @@ const HotelResults = ({ hotels, isLoading }: HotelResultsProps) => {
     );
   }
 
-  if (!hotels?.length) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Aucun hébergement trouvé pour ces critères.</p>
-      </div>
-    );
-  }
+  // Use mockAccommodations if no hotels are provided
+  const accommodationsToDisplay = mockAccommodations;
 
   return (
-    <div className="grid gap-4">
-      {hotels.map((hotel) => (
+    <div className="grid gap-6">
+      {accommodationsToDisplay.map((accommodation) => (
         <div
-          key={hotel.id}
-          className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow"
+          key={accommodation.id}
+          className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
         >
-          <div className="flex items-start gap-4">
-            <Building className="w-6 h-6 text-primary flex-shrink-0" />
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <h3 className="font-semibold text-lg">{hotel.hotel.name}</h3>
-                {hotel.hotel.rating && (
-                  <div className="flex items-center">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="ml-1 text-sm">{hotel.hotel.rating}/5</span>
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Image Section */}
+            <div className="relative h-64 md:h-full">
+              <img
+                src={accommodation.images[0]}
+                alt={accommodation.name}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full">
+                <div className="flex items-center">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="ml-1 text-sm font-medium">{accommodation.rating}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Details Section */}
+            <div className="p-6 md:col-span-2">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">{accommodation.name}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{accommodation.type}</p>
+                  <div className="flex items-center gap-1 text-sm text-gray-600 mt-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{accommodation.address.full}</span>
                   </div>
-                )}
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-primary">
+                    {accommodation.price}¥
+                  </div>
+                  <div className="text-sm text-gray-500">par nuit</div>
+                </div>
               </div>
 
-              {(hotel.hotel.address?.cityName || hotel.hotel.hotelDistance?.distance) && (
-                <div className="flex items-center gap-1 text-sm text-gray-600 mt-1">
-                  <MapPin className="w-4 h-4" />
-                  <span>
-                    {hotel.hotel.address?.cityName}
-                    {hotel.hotel.hotelDistance && ` (${hotel.hotel.hotelDistance.distance}km du centre)`}
-                  </span>
-                </div>
-              )}
+              <p className="text-gray-600 mb-4 line-clamp-2">{accommodation.description}</p>
 
-              <div className="mt-4 space-y-4">
-                {hotel.offers.map((offer) => (
-                  <div key={offer.id} className="border-t pt-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-medium">{offer.room.type}</h4>
-                        {offer.room.description?.text && (
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {offer.room.description.text}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-primary">
-                          {offer.price.total} {offer.price.currency}
-                        </div>
-                        <div className="text-xs text-gray-500">par nuit</div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between items-center mt-4">
-                      <div className="text-sm text-gray-600">
-                        Du {new Date(offer.checkInDate).toLocaleDateString('fr-FR')} au{' '}
-                        {new Date(offer.checkOutDate).toLocaleDateString('fr-FR')}
-                      </div>
-                      <Button 
-                        onClick={() => handleBooking(hotel.id, offer.id)}
-                        size="sm"
-                      >
-                        Réserver
-                      </Button>
-                    </div>
+              {/* Amenities */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                {accommodation.amenities.slice(0, 6).map((amenity, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                    {amenity.toLowerCase().includes('wifi') && <Wifi className="w-4 h-4" />}
+                    {amenity.toLowerCase().includes('petit-déjeuner') && <Coffee className="w-4 h-4" />}
+                    {amenity.toLowerCase().includes('onsen') && <Bath className="w-4 h-4" />}
+                    {amenity.toLowerCase().includes('parking') && <Car className="w-4 h-4" />}
+                    <span>{amenity}</span>
                   </div>
                 ))}
+              </div>
+
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-600">
+                  {accommodation.policies.checkIn} - {accommodation.policies.checkOut}
+                </div>
+                <Button 
+                  onClick={() => handleBooking(accommodation.id.toString(), "1")}
+                  size="sm"
+                >
+                  Réserver maintenant
+                </Button>
               </div>
             </div>
           </div>
