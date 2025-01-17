@@ -8,7 +8,6 @@ interface MapProps {
   type?: 'cities' | 'planner' | 'accommodation' | 'flight' | 'accommodations' | 'booking';
 }
 
-// Coordonnées des principales villes japonaises
 const JAPAN_CITIES = [
   { name: 'Tokyo', coordinates: [139.6917, 35.6895] as [number, number] },
   { name: 'Osaka', coordinates: [135.5023, 34.6937] as [number, number] },
@@ -23,9 +22,6 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
-  const animationFrameId = useRef<number | null>(null);
-  const [hotels, setHotels] = useState<any[]>([]);
-  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,25 +39,16 @@ const Map = ({ type = 'cities' }: MapProps) => {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
-        if (secretError) {
-          console.error('Error fetching Mapbox token:', secretError);
+        if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
+          console.error('Error fetching Mapbox token:', secretError || 'Token not found');
           throw new Error('Failed to fetch Mapbox token');
         }
 
-        if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
-          console.error('Mapbox token not found in response:', secretData);
-          throw new Error('Mapbox token not found');
-        }
-
-        console.log('Mapbox token received successfully');
-
         if (!isMounted) return;
 
-        setMapboxToken(secretData.MAPBOX_PUBLIC_TOKEN);
+        console.log('Initializing map with token...');
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
-        console.log('Initializing map...');
-        
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
@@ -102,11 +89,6 @@ const Map = ({ type = 'cities' }: MapProps) => {
           });
 
           setIsLoading(false);
-
-          // Load hotels if needed
-          if (type === 'accommodation' || type === 'booking') {
-            fetchHotels();
-          }
         });
 
         map.current.on('error', (e) => {
@@ -127,56 +109,10 @@ const Map = ({ type = 'cities' }: MapProps) => {
       }
     };
 
-    const fetchHotels = async () => {
-      try {
-        const { data: hotelsData, error: hotelsError } = await supabase.functions.invoke('amadeus', {
-          body: {
-            action: 'searchHotels',
-            params: {
-              cityCode: 'TYO',
-              checkIn: '2024-02-01',
-              checkOut: '2024-02-05'
-            }
-          }
-        });
-
-        if (hotelsError) {
-          console.error('Error fetching hotels:', hotelsError);
-          return;
-        }
-
-        if (hotelsData?.data && map.current) {
-          setHotels(hotelsData.data);
-          hotelsData.data.forEach((hotel: any) => {
-            if (hotel.hotel && hotel.hotel.latitude && hotel.hotel.longitude) {
-              const marker = new mapboxgl.Marker({ color: '#FF0000' })
-                .setLngLat([hotel.hotel.longitude, hotel.hotel.latitude])
-                .setPopup(new mapboxgl.Popup().setHTML(`
-                  <h3>${hotel.hotel.name}</h3>
-                  <p>${hotel.hotel.address?.cityName || ''}</p>
-                `))
-                .addTo(map.current!);
-              markers.current.push(marker);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error loading hotels:', error);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de charger les hôtels. Veuillez réessayer plus tard.',
-          variant: 'destructive',
-        });
-      }
-    };
-
     initializeMap();
 
     return () => {
       isMounted = false;
-      if (animationFrameId.current) {
-        cancelAnimationFrame(animationFrameId.current);
-      }
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
       if (map.current) {
@@ -194,7 +130,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
     );
   }
 
-  if (isLoading || !mapboxToken) {
+  if (isLoading) {
     return (
       <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
         <p className="text-gray-500">Chargement de la carte...</p>
