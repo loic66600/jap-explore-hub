@@ -75,8 +75,8 @@ const PlannerPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
+      <div className="container mx-auto px-4 pt-20 pb-8"> {/* Ajusté le padding-top ici */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <h1 className="text-4xl font-bold">Planificateur de Voyage</h1>
           <div className="flex gap-4">
             <Button
@@ -89,7 +89,7 @@ const PlannerPage = () => {
             </Button>
             <Button
               onClick={() => saveItinerary({
-                user_id: '', // This will be set in the saveItinerary function
+                user_id: '',
                 items: [],
                 total_budget: calculateTotalBudget()
               })}
@@ -150,6 +150,7 @@ const PlannerPage = () => {
                     {/* Contenu pour le transport */}
                   </div>
                 </TabsContent>
+
               </Tabs>
             </Card>
 
@@ -204,6 +205,7 @@ const PlannerPage = () => {
               </CardContent>
             </Card>
           </div>
+
         </div>
       </div>
     </div>
