@@ -226,6 +226,45 @@ const citiesData: Record<number, CityData> = {
     transport: 'Location de voiture recommandée',
     food: ['Ramen de Sapporo', 'Crabe', 'Fromage de Hokkaido'],
   },
+  6: {
+    id: 6,
+    name: 'Hiroshima',
+    title: 'Découvrez Hiroshima',
+    subtitle: 'Une ville symbole de paix et de résilience',
+    description: 'Une ville moderne qui honore son histoire tout en regardant vers l\'avenir.',
+    bannerImage: 'https://images.unsplash.com/photo-1576675466969-38eeae4b41f6',
+    population: '1.2 millions',
+    bestTime: 'Mars-Mai / Octobre-Novembre',
+    attractions: 40,
+    mainAttractions: [
+      {
+        name: 'Dôme de Genbaku',
+        description: 'Mémorial de la Paix, symbole de l\'espoir et de la paix mondiale.',
+        image: 'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
+      },
+      {
+        name: 'Île de Miyajima',
+        description: 'Célèbre pour son torii flottant et ses temples historiques.',
+        image: 'https://images.unsplash.com/photo-1576675466969-38eeae4b41f6',
+      },
+      {
+        name: 'Parc du Mémorial de la Paix',
+        description: 'Un espace de recueillement et d\'apprentissage.',
+        image: 'https://images.unsplash.com/photo-1527576539890-dfa815648363',
+      },
+    ],
+    itineraries: [
+      { days: 1, description: 'Visite du Mémorial de la Paix et du centre-ville.' },
+      { days: 2, description: 'Excursion à Miyajima et découverte de ses temples.' },
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1576675466969-38eeae4b41f6',
+      'https://images.unsplash.com/photo-1527576539890-dfa815648363',
+      'https://images.unsplash.com/photo-1542640244-7e672d6cef4e',
+    ],
+    transport: 'Tramway et bus pour se déplacer en ville',
+    food: ['Okonomiyaki style Hiroshima', 'Huîtres de Miyajima', 'Momiji Manju'],
+  },
 };
 
 const CityDetail = () => {
