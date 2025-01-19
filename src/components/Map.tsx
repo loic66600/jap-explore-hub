@@ -33,7 +33,8 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
       try {
         setIsLoading(true);
-        console.log('Fetching Mapbox token...');
+        setError(null);
+        console.log('Initializing map...');
         
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
@@ -46,15 +47,24 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
         if (!isMounted) return;
 
-        console.log('Initializing map with token...');
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+
+        // Clear any existing map instance
+        if (map.current) {
+          map.current.remove();
+          map.current = null;
+        }
+
+        // Clear existing markers
+        markers.current.forEach(marker => marker.remove());
+        markers.current = [];
 
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
           projection: 'globe',
           zoom: 4.5,
-          center: [138.2529, 36.2048],
+          center: [138.2529, 36.2048], // Center on Japan
           pitch: 45,
           minZoom: 3,
         });
@@ -99,13 +109,15 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
       } catch (error) {
         console.error('Map initialization error:', error);
-        setError('Impossible d\'initialiser la carte');
-        setIsLoading(false);
-        toast({
-          title: 'Erreur',
-          description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
-          variant: 'destructive',
-        });
+        if (isMounted) {
+          setError('Impossible d\'initialiser la carte');
+          setIsLoading(false);
+          toast({
+            title: 'Erreur',
+            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
+            variant: 'destructive',
+          });
+        }
       }
     };
 
