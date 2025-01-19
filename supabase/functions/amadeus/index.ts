@@ -44,58 +44,8 @@ serve(async (req) => {
 
     const { access_token } = await tokenResponse.json();
 
-    if (action === 'searchFlights') {
+    if (action === 'searchHotels') {
       // Validate required parameters
-      if (!params?.originLocationCode || !params?.destinationLocationCode || !params?.departureDate) {
-        console.error('Missing required parameters:', params);
-        return new Response(
-          JSON.stringify({ 
-            error: 'Missing required flight search parameters',
-            missingParams: {
-              originLocationCode: !params?.originLocationCode,
-              destinationLocationCode: !params?.destinationLocationCode,
-              departureDate: !params?.departureDate
-            }
-          }), 
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
-      }
-
-      console.log('Searching flights with params:', params);
-      
-      const queryParams = new URLSearchParams({
-        originLocationCode: params.originLocationCode,
-        destinationLocationCode: params.destinationLocationCode,
-        departureDate: params.departureDate,
-        adults: params.adults || '1',
-        max: '20',
-        currencyCode: 'EUR'
-      });
-
-      const response = await fetch(`https://test.api.amadeus.com/v2/shopping/flight-offers?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Flight search failed:', response.status, errorText);
-        return new Response(
-          JSON.stringify({ error: `Flight search failed: ${response.statusText}`, details: errorText }), 
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: response.status }
-        );
-      }
-
-      const data = await response.json();
-      console.log('Flight search successful');
-      
-      return new Response(JSON.stringify(data), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      });
-    } else if (action === 'searchHotels') {
-      // Validate required parameters for hotel search
       if (!params?.cityCode || !params?.checkIn || !params?.checkOut) {
         console.error('Missing required hotel search parameters:', params);
         return new Response(
@@ -113,18 +63,25 @@ serve(async (req) => {
 
       console.log('Searching hotels with params:', params);
 
+      // Format dates to ensure they match YYYY-MM-DD format
+      const formattedCheckIn = params.checkIn.split('T')[0];
+      const formattedCheckOut = params.checkOut.split('T')[0];
+      
       const queryParams = new URLSearchParams({
         cityCode: params.cityCode,
-        checkInDate: params.checkIn,
-        checkOutDate: params.checkOut,
+        checkInDate: formattedCheckIn,
+        checkOutDate: formattedCheckOut,
+        roomQuantity: '1',
+        adults: '2',
         radius: '5',
         radiusUnit: 'KM',
         ratings: '3,4,5',
-        priceRange: '50-500',
-        currency: 'EUR',
+        bestRateOnly: 'true',
       });
 
-      const response = await fetch(`https://test.api.amadeus.com/v1/reference-data/locations/hotels/by-city?${queryParams}`, {
+      console.log('Making request to Amadeus with params:', queryParams.toString());
+
+      const response = await fetch(`https://test.api.amadeus.com/v2/shopping/hotel-offers?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${access_token}`,
         },
