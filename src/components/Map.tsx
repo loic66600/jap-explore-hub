@@ -67,6 +67,10 @@ const Map = ({ type = 'cities' }: MapProps) => {
           center: [138.2529, 36.2048], // Center on Japan
           pitch: 45,
           minZoom: 3,
+          maxBounds: [
+            [120.0, 20.0], // Southwest coordinates
+            [150.0, 50.0]  // Northeast coordinates
+          ],
         });
 
         map.current.on('load', () => {
@@ -80,7 +84,9 @@ const Map = ({ type = 'cities' }: MapProps) => {
             'top-right'
           );
 
-          map.current.scrollZoom.disable();
+          // Enable scroll zoom but with a smoother experience
+          map.current.scrollZoom.setWheelZoomRate(1/450);
+          map.current.scrollZoom.enable();
 
           map.current.setFog({
             color: 'rgb(255, 255, 255)',
@@ -88,13 +94,31 @@ const Map = ({ type = 'cities' }: MapProps) => {
             'horizon-blend': 0.2,
           });
 
-          // Add markers for cities
+          // Add markers for cities with custom popup
           JAPAN_CITIES.forEach(city => {
             if (!map.current) return;
-            const marker = new mapboxgl.Marker()
+            
+            const popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              className: 'custom-popup'
+            }).setHTML(`
+              <div class="bg-white p-2 rounded-lg shadow-lg">
+                <h3 class="font-semibold text-sm">${city.name}</h3>
+              </div>
+            `);
+
+            const marker = new mapboxgl.Marker({
+              color: '#ea384c',
+              scale: 0.8
+            })
               .setLngLat(city.coordinates)
-              .setPopup(new mapboxgl.Popup().setHTML(`<h3>${city.name}</h3>`))
+              .setPopup(popup)
               .addTo(map.current);
+
+            marker.getElement().addEventListener('mouseenter', () => popup.addTo(map.current!));
+            marker.getElement().addEventListener('mouseleave', () => popup.remove());
+            
             markers.current.push(marker);
           });
 
@@ -136,7 +160,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
   if (error) {
     return (
-      <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="relative w-full h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -144,16 +168,16 @@ const Map = ({ type = 'cities' }: MapProps) => {
 
   if (isLoading) {
     return (
-      <div className="relative w-full h-[400px] flex items-center justify-center bg-gray-100 rounded-lg">
+      <div className="relative w-full h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
         <p className="text-gray-500">Chargement de la carte...</p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-[400px]">
-      <div ref={mapContainer} className="absolute inset-0 rounded-lg shadow-lg" />
-      <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent to-background/10 rounded-lg" />
+    <div className="relative w-full h-[500px] rounded-lg overflow-hidden">
+      <div ref={mapContainer} className="absolute inset-0" />
+      <div className="absolute inset-0 pointer-events-none rounded-lg ring-1 ring-inset ring-gray-900/10" />
     </div>
   );
 };
