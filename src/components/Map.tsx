@@ -29,28 +29,44 @@ const Map = ({ type = 'cities' }: MapProps) => {
     let isMounted = true;
 
     const initializeMap = async () => {
-      if (!mapContainer.current) return;
+      if (!mapContainer.current) {
+        console.error('Map container not found');
+        return;
+      }
 
       try {
         setIsLoading(true);
         setError(null);
-        console.log('Initializing map...');
+        console.log('Starting map initialization...');
         
+        console.log('Fetching Mapbox token from Supabase...');
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['Token Mapbox2'] }
         });
 
-        if (secretError || !secretData?.['Token Mapbox2']) {
-          console.error('Error fetching Mapbox token:', secretError || 'Token not found');
+        console.log('Secret response:', { data: secretData, error: secretError });
+
+        if (secretError) {
+          console.error('Error fetching Mapbox token:', secretError);
           throw new Error('Failed to fetch Mapbox token');
         }
 
-        if (!isMounted) return;
+        if (!secretData?.['Token Mapbox2']) {
+          console.error('Mapbox token not found in response');
+          throw new Error('Mapbox token not found');
+        }
 
+        if (!isMounted) {
+          console.log('Component unmounted, stopping initialization');
+          return;
+        }
+
+        console.log('Initializing Mapbox with token...');
         mapboxgl.accessToken = secretData['Token Mapbox2'];
 
         // Clear any existing map instance
         if (map.current) {
+          console.log('Removing existing map instance');
           map.current.remove();
           map.current = null;
         }
@@ -59,6 +75,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
         markers.current.forEach(marker => marker.remove());
         markers.current = [];
 
+        console.log('Creating new map instance...');
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
@@ -144,9 +161,11 @@ const Map = ({ type = 'cities' }: MapProps) => {
       }
     };
 
+    console.log('Starting map initialization process...');
     initializeMap();
 
     return () => {
+      console.log('Cleaning up map component...');
       isMounted = false;
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
