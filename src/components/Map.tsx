@@ -37,17 +37,17 @@ const Map = ({ type = 'cities' }: MapProps) => {
         console.log('Initializing map...');
         
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
-          body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
+          body: { secrets: ['Token Mapbox2'] }
         });
 
-        if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
+        if (secretError || !secretData?.['Token Mapbox2']) {
           console.error('Error fetching Mapbox token:', secretError || 'Token not found');
           throw new Error('Failed to fetch Mapbox token');
         }
 
         if (!isMounted) return;
 
-        mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+        mapboxgl.accessToken = secretData['Token Mapbox2'];
 
         // Clear any existing map instance
         if (map.current) {
@@ -84,7 +84,6 @@ const Map = ({ type = 'cities' }: MapProps) => {
             'top-right'
           );
 
-          // Enable scroll zoom but with a smoother experience
           map.current.scrollZoom.setWheelZoomRate(1/450);
           map.current.scrollZoom.enable();
 
