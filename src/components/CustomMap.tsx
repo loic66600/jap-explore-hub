@@ -34,20 +34,24 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
       try {
         setIsLoading(true);
         setError(null);
+        console.log('Tentative d\'initialisation de la carte...');
 
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
         if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
-          throw new Error('Failed to fetch Mapbox token');
+          console.error('Erreur lors de la récupération du token Mapbox:', secretError);
+          throw new Error('Impossible de récupérer le token Mapbox');
         }
+
+        console.log('Token Mapbox récupéré avec succès');
 
         if (!isMounted) return;
 
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
-        // Clean up existing map and markers
+        // Nettoyage des ressources existantes
         if (map.current) {
           map.current.remove();
           map.current = null;
@@ -56,25 +60,28 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
         markers.current.forEach(marker => marker.remove());
         markers.current = [];
 
-        // Initialize new map
+        // Initialisation de la nouvelle carte
+        console.log('Création de la carte...');
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
           projection: 'globe',
           zoom: 4.5,
-          center: [138.2529, 36.2048],
+          center: [138.2529, 36.2048], // Centre sur le Japon
           pitch: 45,
           minZoom: 3,
           maxBounds: [
-            [120.0, 20.0],
-            [150.0, 50.0]
+            [120.0, 20.0], // Coordonnées Sud-Ouest
+            [150.0, 50.0]  // Coordonnées Nord-Est
           ],
         });
 
+        // Gestion des événements de la carte
         map.current.on('load', () => {
           if (!map.current || !isMounted) return;
+          console.log('Carte chargée avec succès');
 
-          // Add navigation control
+          // Ajout des contrôles de navigation
           map.current.addControl(
             new mapboxgl.NavigationControl({
               visualizePitch: true,
@@ -82,18 +89,18 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
             'top-right'
           );
 
-          // Configure zoom behavior
+          // Configuration du zoom
           map.current.scrollZoom.setWheelZoomRate(1/450);
           map.current.scrollZoom.enable();
 
-          // Add fog effect
+          // Ajout des effets visuels
           map.current.setFog({
             color: 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
           });
 
-          // Add markers for cities
+          // Ajout des marqueurs pour les villes
           JAPAN_CITIES.forEach(city => {
             if (!map.current) return;
             
@@ -124,14 +131,25 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
           setIsLoading(false);
         });
 
-      } catch (error) {
-        console.error('Map initialization error:', error);
+        map.current.on('error', (e) => {
+          console.error('Erreur Mapbox:', e);
+          setError('Une erreur est survenue lors du chargement de la carte');
+          setIsLoading(false);
+          toast({
+            title: 'Erreur',
+            description: 'Problème lors du chargement de la carte',
+            variant: 'destructive',
+          });
+        });
+
+      } catch (error: any) {
+        console.error('Erreur d\'initialisation de la carte:', error);
         if (isMounted) {
           setError('Impossible d\'initialiser la carte');
           setIsLoading(false);
           toast({
             title: 'Erreur',
-            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
+            description: error.message || 'Impossible d\'initialiser la carte',
             variant: 'destructive',
           });
         }
