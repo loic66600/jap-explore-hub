@@ -34,14 +34,12 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
       try {
         setIsLoading(true);
         setError(null);
-        console.log('Initializing custom map...');
-        
+
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
         if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
-          console.error('Error fetching Mapbox token:', secretError || 'Token not found');
           throw new Error('Failed to fetch Mapbox token');
         }
 
@@ -49,6 +47,7 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
 
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
+        // Clean up existing map and markers
         if (map.current) {
           map.current.remove();
           map.current = null;
@@ -57,6 +56,7 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
         markers.current.forEach(marker => marker.remove());
         markers.current = [];
 
+        // Initialize new map
         map.current = new mapboxgl.Map({
           container: mapContainer.current,
           style: 'mapbox://styles/mapbox/light-v11',
@@ -73,8 +73,8 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
 
         map.current.on('load', () => {
           if (!map.current || !isMounted) return;
-          console.log('Custom map loaded successfully');
 
+          // Add navigation control
           map.current.addControl(
             new mapboxgl.NavigationControl({
               visualizePitch: true,
@@ -82,15 +82,18 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
             'top-right'
           );
 
+          // Configure zoom behavior
           map.current.scrollZoom.setWheelZoomRate(1/450);
           map.current.scrollZoom.enable();
 
+          // Add fog effect
           map.current.setFog({
             color: 'rgb(255, 255, 255)',
             'high-color': 'rgb(200, 200, 225)',
             'horizon-blend': 0.2,
           });
 
+          // Add markers for cities
           JAPAN_CITIES.forEach(city => {
             if (!map.current) return;
             
@@ -118,12 +121,6 @@ const CustomMap = ({ type = 'cities' }: CustomMapProps) => {
             markers.current.push(marker);
           });
 
-          setIsLoading(false);
-        });
-
-        map.current.on('error', (e) => {
-          console.error('Mapbox error:', e);
-          setError('Une erreur est survenue lors du chargement de la carte');
           setIsLoading(false);
         });
 
