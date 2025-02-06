@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useMapbox } from '@/hooks/useMapbox';
 
@@ -9,8 +9,16 @@ interface MapProps {
 
 const Map = ({ type = 'cities' }: MapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
+  const [containerReady, setContainerReady] = useState(false);
+
+  useEffect(() => {
+    if (mapContainer.current) {
+      setContainerReady(true);
+    }
+  }, []);
+
   const { isLoading, error } = useMapbox({
-    container: mapContainer.current!,
+    container: containerReady ? mapContainer.current! : null as unknown as HTMLDivElement,
     type,
   });
 

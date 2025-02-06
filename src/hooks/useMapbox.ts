@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { supabase } from '@/integrations/supabase/client';
@@ -22,51 +21,41 @@ export const useMapbox = ({ container, type }: MapboxConfig) => {
     let isMounted = true;
 
     const initializeMap = async () => {
-      console.log('Checking map container...', { container });
-      if (!container) {
-        console.log('Map container is not ready yet');
-        return;
-      }
-
-      if (initializationAttempted.current) {
-        console.log('Map initialization already attempted');
-        return;
-      }
-
-      initializationAttempted.current = true;
-
       try {
+        if (!container) {
+          console.log('Container not available yet, waiting...');
+          return;
+        }
+
+        if (initializationAttempted.current) {
+          console.log('Map initialization already attempted');
+          return;
+        }
+
+        initializationAttempted.current = true;
+        console.log('Starting map initialization with container:', container);
         setIsLoading(true);
         setError(null);
-        console.log('Starting map initialization...');
-        
+
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
           body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
-
-        console.log('Secret response:', { data: secretData, error: secretError });
 
         if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
           console.error('Error fetching Mapbox token:', secretError);
           throw new Error('Failed to fetch Mapbox token');
         }
 
-        if (!isMounted) {
-          console.log('Component unmounted, stopping initialization');
-          return;
-        }
+        if (!isMounted) return;
 
-        console.log('Initializing Mapbox with token...');
         mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+        console.log('Mapbox token set successfully');
 
-        // Clear any existing map instance
+        // Clear existing map and markers
         if (map.current) {
-          console.log('Removing existing map instance');
           map.current.remove();
           map.current = null;
         }
-
-        // Clear existing markers
         markers.current.forEach(marker => marker.remove());
         markers.current = [];
 
@@ -83,43 +72,39 @@ export const useMapbox = ({ container, type }: MapboxConfig) => {
         });
 
         map.current.on('load', () => {
-          if (!map.current || !isMounted) {
-            console.log('Map or component not available after load');
-            return;
-          }
+          if (!map.current || !isMounted) return;
           console.log('Map loaded successfully');
 
           initializeMapControls(map.current);
           addCityMarkers({ map: map.current, markers });
 
           setIsLoading(false);
-          console.log('Map initialization complete');
         });
 
         map.current.on('error', (event: mapboxgl.ErrorEvent) => {
-          const error = new Error(event.error.message);
-          error.name = 'MapboxError';
-          handleMapError(error);
+          handleMapError(new Error(event.error.message));
         });
 
       } catch (error: any) {
-        handleInitializationError(error);
+        if (isMounted) {
+          handleInitializationError(error);
+        }
       }
     };
 
-    const timer = setTimeout(() => {
-      console.log('Attempting map initialization after delay');
+    // Only initialize if we have a container
+    if (container) {
+      console.log('Container ready, initializing map...');
       initializeMap();
-    }, 500);
+    }
 
     return () => {
       console.log('Cleaning up map component...');
-      clearTimeout(timer);
       isMounted = false;
       cleanup();
       initializationAttempted.current = false;
     };
-  }, [container, type]);
+  }, [container, type]); // Re-run effect when container changes
 
   return { isLoading, error };
 };
