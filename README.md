@@ -30,7 +30,7 @@ Le site est accessible à l'adresse suivante :
 
 ## Développement local
 
-Si vous souhaitez exécuter ce projet localement :
+Pour exécuter ce projet localement :
 
 ```sh
 # Clonez le dépôt
@@ -45,6 +45,10 @@ npm install
 # Lancez le serveur de développement
 npm run dev
 ```
+
+## Déploiement
+
+Le déploiement sur GitHub Pages est automatisé via GitHub Actions. Chaque push sur la branche main déclenche automatiquement un nouveau déploiement.
 
 ## Contribution
 
