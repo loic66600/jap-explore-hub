@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -24,36 +25,39 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const initializationAttempted = useRef(false);
 
   useEffect(() => {
     let isMounted = true;
 
     const initializeMap = async () => {
+      console.log('Checking map container...', { container: mapContainer.current });
       if (!mapContainer.current) {
-        console.error('Map container not found');
+        console.log('Map container is not ready yet');
         return;
       }
+
+      if (initializationAttempted.current) {
+        console.log('Map initialization already attempted');
+        return;
+      }
+
+      initializationAttempted.current = true;
 
       try {
         setIsLoading(true);
         setError(null);
         console.log('Starting map initialization...');
         
-        console.log('Fetching Mapbox token from Supabase...');
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
-          body: { secrets: ['Token Mapbox2'] }
+          body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
         console.log('Secret response:', { data: secretData, error: secretError });
 
-        if (secretError) {
+        if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
           console.error('Error fetching Mapbox token:', secretError);
           throw new Error('Failed to fetch Mapbox token');
-        }
-
-        if (!secretData?.['Token Mapbox2']) {
-          console.error('Mapbox token not found in response');
-          throw new Error('Mapbox token not found');
         }
 
         if (!isMounted) {
@@ -62,7 +66,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
         }
 
         console.log('Initializing Mapbox with token...');
-        mapboxgl.accessToken = secretData['Token Mapbox2'];
+        mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
         // Clear any existing map instance
         if (map.current) {
@@ -74,6 +78,12 @@ const Map = ({ type = 'cities' }: MapProps) => {
         // Clear existing markers
         markers.current.forEach(marker => marker.remove());
         markers.current = [];
+
+        // Verify container still exists before creating map
+        if (!mapContainer.current) {
+          console.error('Map container was removed during initialization');
+          return;
+        }
 
         console.log('Creating new map instance...');
         map.current = new mapboxgl.Map({
@@ -91,7 +101,10 @@ const Map = ({ type = 'cities' }: MapProps) => {
         });
 
         map.current.on('load', () => {
-          if (!map.current || !isMounted) return;
+          if (!map.current || !isMounted) {
+            console.log('Map or component not available after load');
+            return;
+          }
           console.log('Map loaded successfully');
 
           map.current.addControl(
@@ -139,33 +152,42 @@ const Map = ({ type = 'cities' }: MapProps) => {
           });
 
           setIsLoading(false);
+          console.log('Map initialization complete');
         });
 
         map.current.on('error', (e) => {
           console.error('Mapbox error:', e);
           setError('Une erreur est survenue lors du chargement de la carte');
           setIsLoading(false);
+          toast({
+            title: 'Erreur',
+            description: 'Une erreur est survenue lors du chargement de la carte.',
+            variant: 'destructive',
+          });
         });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Map initialization error:', error);
         if (isMounted) {
           setError('Impossible d\'initialiser la carte');
           setIsLoading(false);
           toast({
             title: 'Erreur',
-            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
+            description: error.message || 'Impossible d\'initialiser la carte',
             variant: 'destructive',
           });
         }
       }
     };
 
-    console.log('Starting map initialization process...');
-    initializeMap();
+    const timer = setTimeout(() => {
+      console.log('Attempting map initialization after delay');
+      initializeMap();
+    }, 500); // Add a small delay to ensure container is ready
 
     return () => {
       console.log('Cleaning up map component...');
+      clearTimeout(timer);
       isMounted = false;
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
@@ -173,6 +195,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
         map.current.remove();
         map.current = null;
       }
+      initializationAttempted.current = false;
     };
   }, [type]);
 
