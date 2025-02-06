@@ -97,7 +97,9 @@ export const useMapbox = ({ container, type }: MapboxConfig) => {
         });
 
         map.current.on('error', (event: mapboxgl.ErrorEvent) => {
-          handleMapError(event.error);
+          const error = new Error(event.error.message);
+          error.name = 'MapboxError';
+          handleMapError(error);
         });
 
       } catch (error: any) {
