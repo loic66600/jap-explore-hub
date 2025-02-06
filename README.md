@@ -1,69 +1,55 @@
-# Welcome to your Lovable project
 
-## Project info
+# Japan Explore Hub 🗾
 
-**URL**: https://lovable.dev/projects/0f763c44-1354-4856-ae59-b7d997949b01
+## À propos du projet
 
-## How can I edit this code?
+Japan Explore Hub est un site web interactif dédié à l'exploration du Japon. Il propose une expérience immersive permettant aux utilisateurs de découvrir les principales villes japonaises à travers une carte interactive et des informations détaillées.
 
-There are several ways of editing your application.
+## Fonctionnalités
 
-**Use Lovable**
+- 🗺️ Carte interactive du Japon avec les principales villes
+- 🏯 Informations détaillées sur les villes majeures
+- 📍 Points d'intérêt et attractions touristiques
+- 📱 Interface responsive adaptée à tous les appareils
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/0f763c44-1354-4856-ae59-b7d997949b01) and start prompting.
+## Technologies utilisées
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
+Ce projet est construit avec :
 
 - Vite
 - TypeScript
 - React
 - shadcn-ui
 - Tailwind CSS
+- Mapbox GL pour la cartographie interactive
 
-## How can I deploy this project?
+## Comment accéder au site
 
-Simply open [Lovable](https://lovable.dev/projects/0f763c44-1354-4856-ae59-b7d997949b01) and click on Share -> Publish.
+Le site est accessible à l'adresse suivante :
+[https://loic66600.github.io/jap-explore-hub/](https://loic66600.github.io/jap-explore-hub/)
 
-## I want to use a custom domain - is that possible?
+## Développement local
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+Si vous souhaitez exécuter ce projet localement :
+
+```sh
+# Clonez le dépôt
+git clone https://github.com/loic66600/jap-explore-hub.git
+
+# Accédez au répertoire du projet
+cd jap-explore-hub
+
+# Installez les dépendances
+npm install
+
+# Lancez le serveur de développement
+npm run dev
+```
+
+## Contribution
+
+Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou à soumettre une pull request.
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
