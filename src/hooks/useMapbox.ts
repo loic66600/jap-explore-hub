@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { addCityMarkers } from '@/components/map/MapMarker';
+import { MAP_CONFIG } from '@/config/map-constants';
 
 export interface MapboxConfig {
   container: HTMLDivElement;
@@ -73,14 +75,11 @@ export const useMapbox = ({ container, type }: MapboxConfig) => {
           container,
           style: 'mapbox://styles/mapbox/light-v11',
           projection: 'globe',
-          zoom: 4.5,
-          center: [138.2529, 36.2048], // Center on Japan
+          zoom: MAP_CONFIG.defaultZoom,
+          center: MAP_CONFIG.defaultCenter,
           pitch: 45,
-          minZoom: 3,
-          maxBounds: [
-            [120.0, 20.0], // Southwest coordinates
-            [150.0, 50.0]  // Northeast coordinates
-          ],
+          minZoom: MAP_CONFIG.minZoom,
+          maxBounds: MAP_CONFIG.maxBounds,
         });
 
         map.current.on('load', () => {
@@ -91,13 +90,15 @@ export const useMapbox = ({ container, type }: MapboxConfig) => {
           console.log('Map loaded successfully');
 
           initializeMapControls(map.current);
-          addCityMarkers(map.current);
+          addCityMarkers({ map: map.current, markers });
 
           setIsLoading(false);
           console.log('Map initialization complete');
         });
 
-        map.current.on('error', handleMapError);
+        map.current.on('error', (event: mapboxgl.ErrorEvent) => {
+          handleMapError(event.error);
+        });
 
       } catch (error: any) {
         handleInitializationError(error);
@@ -140,8 +141,8 @@ const initializeMapControls = (map: mapboxgl.Map) => {
   });
 };
 
-const handleMapError = (e: Error) => {
-  console.error('Mapbox error:', e);
+const handleMapError = (error: Error) => {
+  console.error('Mapbox error:', error);
   toast({
     title: 'Erreur',
     description: 'Une erreur est survenue lors du chargement de la carte.',
