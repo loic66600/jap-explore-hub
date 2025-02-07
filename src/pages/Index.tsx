@@ -1,8 +1,7 @@
-
 import Navigation from '@/components/Navigation';
 import Hero from '@/components/Hero';
 import Cities from '@/components/Cities';
-import Map from '@/components/Map';
+import CustomMap from '@/components/CustomMap';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 
@@ -12,7 +11,7 @@ const Index = () => {
       <Navigation />
       <Hero />
       <Cities />
-      <Map type="cities" />
+      <CustomMap type="cities" />
       <Contact />
       <Footer />
     </div>

@@ -6,15 +6,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: '/',
+  base: '/jap-explore-hub/',
   server: {
     host: "::",
     port: 8080,
-    allowedHosts: [
-      'localhost',
-      '.lovableproject.com',
-      '*.lovableproject.com'
-    ],
   },
   plugins: [
     react(),
@@ -26,10 +21,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  define: {
-    __WS_TOKEN__: mode === 'development' ? '"development"' : 'process.env.WS_TOKEN',
-  },
-  optimizeDeps: {
-    exclude: ['lovable-tagger']
-  }
 }));
