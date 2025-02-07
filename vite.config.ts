@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   define: {
-    __WS_TOKEN__: JSON.stringify(process.env.WS_TOKEN || 'development'),
+    __WS_TOKEN__: mode === 'development' ? '"development"' : 'process.env.WS_TOKEN',
   },
   optimizeDeps: {
     exclude: ['lovable-tagger']
