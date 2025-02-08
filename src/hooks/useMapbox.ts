@@ -14,10 +14,9 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const initializationTimeout = useRef<NodeJS.Timeout>();
-  const maxRetries = 3;
-  const retryDelay = 1000;
-  const retryAttempts = useRef(0);
+  const [attempt, setAttempt] = useState(0);
+  const maxAttempts = 5;
+  const retryDelay = 500;
 
   const clearMapResources = () => {
     markers.current.forEach(marker => marker.remove());
@@ -29,20 +28,24 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
   };
 
   const initializeMap = async () => {
-    console.log(`Attempt ${retryAttempts.current + 1}/${maxRetries} to initialize map`);
+    console.log(`Initializing map - Attempt ${attempt + 1}/${maxAttempts}`);
 
     // Check if container exists
     if (!mapContainer.current) {
-      console.warn('Map container not found, waiting...');
-      if (retryAttempts.current < maxRetries) {
-        retryAttempts.current += 1;
-        initializationTimeout.current = setTimeout(initializeMap, retryDelay);
-        return;
+      console.warn('Map container not found');
+      if (attempt < maxAttempts) {
+        setAttempt(prev => prev + 1);
+        setTimeout(() => initializeMap(), retryDelay);
       } else {
         setError('Could not find map container after multiple attempts');
         setIsLoading(false);
-        return;
+        toast({
+          title: 'Error',
+          description: 'Failed to initialize map - container not found',
+          variant: 'destructive',
+        });
       }
+      return;
     }
 
     try {
@@ -54,8 +57,14 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
       });
 
-      if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
-        throw new Error(secretError?.message || 'Failed to fetch Mapbox token');
+      if (secretError) {
+        console.error('Error fetching Mapbox token:', secretError);
+        throw new Error(secretError.message || 'Failed to fetch Mapbox token');
+      }
+
+      if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
+        console.error('No Mapbox token received');
+        throw new Error('No Mapbox token received from server');
       }
 
       mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
@@ -115,41 +124,26 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
 
     } catch (error: any) {
       console.error('Map initialization error:', error);
-      
-      if (retryAttempts.current < maxRetries) {
-        console.log(`Retrying initialization (attempt ${retryAttempts.current + 1}/${maxRetries})...`);
-        retryAttempts.current += 1;
-        initializationTimeout.current = setTimeout(initializeMap, retryDelay);
-      } else {
-        setError('Failed to initialize map after multiple attempts');
-        setIsLoading(false);
-        toast({
-          title: 'Error',
-          description: 'Failed to load the map after multiple attempts',
-          variant: 'destructive',
-        });
-      }
+      setError(error.message || 'Failed to initialize map');
+      setIsLoading(false);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to initialize map',
+        variant: 'destructive',
+      });
     }
   };
 
   useEffect(() => {
     let mounted = true;
 
-    const startInitialization = () => {
-      if (mounted) {
-        console.log('Starting map initialization...');
-        initializeMap();
-      }
-    };
-
-    // Initial delay to ensure DOM is ready
-    initializationTimeout.current = setTimeout(startInitialization, 500);
+    if (mounted) {
+      console.log('Starting map initialization...');
+      initializeMap();
+    }
 
     return () => {
       mounted = false;
-      if (initializationTimeout.current) {
-        clearTimeout(initializationTimeout.current);
-      }
       clearMapResources();
     };
   }, [type]);

@@ -18,17 +18,15 @@ const Map = ({ type = 'cities' }: MapProps) => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="relative w-full h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
-        <p className="text-gray-500">Loading map...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="relative w-full h-[500px] rounded-lg overflow-hidden">
-      <div ref={mapContainer} className="absolute inset-0" />
+      <div ref={mapContainer} className="absolute inset-0">
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100/50">
+            <p className="text-gray-500">Loading map...</p>
+          </div>
+        )}
+      </div>
       <div className="absolute inset-0 pointer-events-none rounded-lg ring-1 ring-inset ring-gray-900/10" />
     </div>
   );
