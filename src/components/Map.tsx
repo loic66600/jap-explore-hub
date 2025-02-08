@@ -21,7 +21,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
   if (isLoading) {
     return (
       <div className="relative w-full h-[500px] flex items-center justify-center bg-gray-100 rounded-lg">
-        <p className="text-gray-500">Chargement de la carte...</p>
+        <p className="text-gray-500">Loading map...</p>
       </div>
     );
   }

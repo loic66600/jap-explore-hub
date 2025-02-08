@@ -15,8 +15,9 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const initializationTimeout = useRef<NodeJS.Timeout>();
-  const initializationAttempts = useRef(0);
-  const MAX_ATTEMPTS = 3;
+  const maxRetries = 3;
+  const retryDelay = 1000;
+  const retryAttempts = useRef(0);
 
   const clearMapResources = () => {
     markers.current.forEach(marker => marker.remove());
@@ -27,53 +28,39 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
     }
   };
 
-  const setupMapControls = (mapInstance: mapboxgl.Map) => {
-    mapInstance.addControl(
-      new mapboxgl.NavigationControl({
-        visualizePitch: true,
-      }),
-      'top-right'
-    );
-
-    mapInstance.scrollZoom.setWheelZoomRate(1/450);
-    mapInstance.scrollZoom.enable();
-
-    mapInstance.setFog({
-      color: 'rgb(255, 255, 255)',
-      'high-color': 'rgb(200, 200, 225)',
-      'horizon-blend': 0.2,
-    });
-  };
-
   const initializeMap = async () => {
-    console.log('Starting map initialization attempt:', initializationAttempts.current + 1);
-    
+    console.log(`Attempt ${retryAttempts.current + 1}/${maxRetries} to initialize map`);
+
+    // Check if container exists
     if (!mapContainer.current) {
-      console.error('Map container not found, will retry...');
-      return;
+      console.warn('Map container not found, waiting...');
+      if (retryAttempts.current < maxRetries) {
+        retryAttempts.current += 1;
+        initializationTimeout.current = setTimeout(initializeMap, retryDelay);
+        return;
+      } else {
+        setError('Could not find map container after multiple attempts');
+        setIsLoading(false);
+        return;
+      }
     }
 
     try {
       setIsLoading(true);
       setError(null);
-      
+
       console.log('Fetching Mapbox token...');
       const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
         body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
       });
 
-      if (secretError) {
-        console.error('Error fetching Mapbox token:', secretError);
-        throw new Error('Failed to fetch Mapbox token');
+      if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
+        throw new Error(secretError?.message || 'Failed to fetch Mapbox token');
       }
 
-      if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
-        console.error('Mapbox token not found in response:', secretData);
-        throw new Error('Mapbox token not found');
-      }
-
-      console.log('Successfully retrieved Mapbox token');
       mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+
+      // Clear existing map instance if any
       clearMapResources();
 
       console.log('Creating new map instance...');
@@ -91,38 +78,54 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         ],
       });
 
+      // Setup map controls and event listeners
       map.current.on('load', () => {
         if (!map.current) return;
+        
+        map.current.addControl(
+          new mapboxgl.NavigationControl({
+            visualizePitch: true,
+          }),
+          'top-right'
+        );
+
+        map.current.scrollZoom.setWheelZoomRate(1/450);
+        map.current.scrollZoom.enable();
+
+        map.current.setFog({
+          color: 'rgb(255, 255, 255)',
+          'high-color': 'rgb(200, 200, 225)',
+          'horizon-blend': 0.2,
+        });
+
         console.log('Map loaded successfully');
-        setupMapControls(map.current);
         setIsLoading(false);
       });
 
       map.current.on('error', (e) => {
         console.error('Mapbox error:', e);
-        setError('Une erreur est survenue lors du chargement de la carte');
+        setError('An error occurred while loading the map');
         setIsLoading(false);
         toast({
-          title: 'Erreur',
-          description: 'Une erreur est survenue lors du chargement de la carte',
+          title: 'Error',
+          description: 'An error occurred while loading the map',
           variant: 'destructive',
         });
       });
 
     } catch (error: any) {
       console.error('Map initialization error:', error);
-      setError('Impossible d\'initialiser la carte');
-      setIsLoading(false);
       
-      // Retry logic
-      if (initializationAttempts.current < MAX_ATTEMPTS) {
-        initializationAttempts.current += 1;
-        console.log(`Retrying initialization (attempt ${initializationAttempts.current + 1}/${MAX_ATTEMPTS})...`);
-        initializationTimeout.current = setTimeout(initializeMap, 1000);
+      if (retryAttempts.current < maxRetries) {
+        console.log(`Retrying initialization (attempt ${retryAttempts.current + 1}/${maxRetries})...`);
+        retryAttempts.current += 1;
+        initializationTimeout.current = setTimeout(initializeMap, retryDelay);
       } else {
+        setError('Failed to initialize map after multiple attempts');
+        setIsLoading(false);
         toast({
-          title: 'Erreur',
-          description: 'Impossible d\'initialiser la carte après plusieurs tentatives',
+          title: 'Error',
+          description: 'Failed to load the map after multiple attempts',
           variant: 'destructive',
         });
       }
@@ -133,14 +136,14 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
     let mounted = true;
 
     const startInitialization = () => {
-      console.log('Starting delayed map initialization...');
       if (mounted) {
+        console.log('Starting map initialization...');
         initializeMap();
       }
     };
 
-    // Initial delay for DOM to be ready
-    initializationTimeout.current = setTimeout(startInitialization, 1000);
+    // Initial delay to ensure DOM is ready
+    initializationTimeout.current = setTimeout(startInitialization, 500);
 
     return () => {
       mounted = false;
