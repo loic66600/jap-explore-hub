@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts"
 
 const corsHeaders = {
@@ -7,8 +8,11 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('get-secrets function called')
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('Handling CORS preflight request')
     return new Response(null, { 
       headers: corsHeaders,
       status: 204
@@ -16,13 +20,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Parsing request body...')
     const { secrets } = await req.json()
     
     if (!secrets || !Array.isArray(secrets)) {
+      console.error('Invalid secrets parameter:', secrets)
       throw new Error('Invalid secrets parameter')
     }
 
-    console.log('Fetching secrets:', secrets)
+    console.log('Requested secrets:', secrets)
     
     const values: Record<string, string> = {}
 
@@ -34,7 +40,7 @@ serve(async (req) => {
       values[secret] = value || ''
     }
 
-    console.log('Successfully retrieved secrets')
+    console.log('Successfully retrieved secrets:', Object.keys(values))
 
     return new Response(
       JSON.stringify(values),

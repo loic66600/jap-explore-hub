@@ -62,10 +62,17 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
       });
 
-      if (secretError || !secretData?.MAPBOX_PUBLIC_TOKEN) {
+      if (secretError) {
+        console.error('Error fetching Mapbox token:', secretError);
         throw new Error('Failed to fetch Mapbox token');
       }
 
+      if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
+        console.error('Mapbox token not found in response:', secretData);
+        throw new Error('Mapbox token not found');
+      }
+
+      console.log('Successfully retrieved Mapbox token');
       mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
       clearMapResources();
 
