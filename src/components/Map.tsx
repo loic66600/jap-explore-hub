@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -24,24 +25,25 @@ const Map = ({ type = 'cities' }: MapProps) => {
   const markers = useRef<mapboxgl.Marker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const initializationTimeout = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     let isMounted = true;
 
     const initializeMap = async () => {
+      console.log('Starting map initialization...');
       if (!mapContainer.current) {
-        console.error('Map container not found');
+        console.error('Map container not found, waiting for DOM...');
         return;
       }
 
       try {
         setIsLoading(true);
         setError(null);
-        console.log('Starting map initialization...');
         
         console.log('Fetching Mapbox token from Supabase...');
         const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
-          body: { secrets: ['Token Mapbox2'] }
+          body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
         });
 
         console.log('Secret response:', { data: secretData, error: secretError });
@@ -51,7 +53,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
           throw new Error('Failed to fetch Mapbox token');
         }
 
-        if (!secretData?.['Token Mapbox2']) {
+        if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
           console.error('Mapbox token not found in response');
           throw new Error('Mapbox token not found');
         }
@@ -62,7 +64,7 @@ const Map = ({ type = 'cities' }: MapProps) => {
         }
 
         console.log('Initializing Mapbox with token...');
-        mapboxgl.accessToken = secretData['Token Mapbox2'];
+        mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
         // Clear any existing map instance
         if (map.current) {
@@ -145,28 +147,39 @@ const Map = ({ type = 'cities' }: MapProps) => {
           console.error('Mapbox error:', e);
           setError('Une erreur est survenue lors du chargement de la carte');
           setIsLoading(false);
+          toast({
+            title: 'Erreur',
+            description: 'Une erreur est survenue lors du chargement de la carte. Veuillez réessayer.',
+            variant: 'destructive',
+          });
         });
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Map initialization error:', error);
         if (isMounted) {
           setError('Impossible d\'initialiser la carte');
           setIsLoading(false);
           toast({
             title: 'Erreur',
-            description: 'Impossible d\'initialiser la carte. Veuillez réessayer plus tard.',
+            description: error.message || 'Impossible d\'initialiser la carte',
             variant: 'destructive',
           });
         }
       }
     };
 
-    console.log('Starting map initialization process...');
-    initializeMap();
+    // Add a small delay before initialization to ensure DOM is ready
+    initializationTimeout.current = setTimeout(() => {
+      console.log('Starting delayed map initialization...');
+      initializeMap();
+    }, 500);
 
     return () => {
       console.log('Cleaning up map component...');
       isMounted = false;
+      if (initializationTimeout.current) {
+        clearTimeout(initializationTimeout.current);
+      }
       markers.current.forEach(marker => marker.remove());
       markers.current = [];
       if (map.current) {
