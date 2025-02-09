@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
+import { mockHotels } from '@/fixtures/hotels';
+import { mockCities } from '@/fixtures/cities';
 
 interface UseMapboxProps {
   type?: 'cities' | 'planner' | 'accommodation' | 'flight' | 'accommodations' | 'booking';
@@ -27,10 +29,62 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
     }
   };
 
+  const addMarkers = () => {
+    if (!map.current) return;
+
+    if (type === 'cities') {
+      mockCities.forEach((city) => {
+        const marker = new mapboxgl.Marker({
+          color: '#9b87f5'
+        })
+          .setLngLat([city.coordinates.longitude, city.coordinates.latitude])
+          .setPopup(new mapboxgl.Popup().setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold">${city.name}</h3>
+              <p class="text-sm">${city.description}</p>
+            </div>
+          `))
+          .addTo(map.current!);
+        
+        markers.current.push(marker);
+      });
+    } else if (type === 'accommodations') {
+      mockHotels.forEach((hotel) => {
+        const coordinates = getHotelCoordinates(hotel.hotel.name);
+        if (coordinates) {
+          const marker = new mapboxgl.Marker({
+            color: '#F97316'
+          })
+            .setLngLat([coordinates.longitude, coordinates.latitude])
+            .setPopup(new mapboxgl.Popup().setHTML(`
+              <div class="p-2">
+                <h3 class="font-bold">${hotel.hotel.name}</h3>
+                <p class="text-sm">${hotel.hotel.address.line1}</p>
+                <p class="text-sm font-semibold">${hotel.offers[0].price.total} ${hotel.offers[0].price.currency}</p>
+              </div>
+            `))
+            .addTo(map.current!);
+          
+          markers.current.push(marker);
+        }
+      });
+    }
+  };
+
+  const getHotelCoordinates = (hotelName: string) => {
+    // Simulated coordinates for hotels
+    const hotelCoordinates: Record<string, { latitude: number; longitude: number }> = {
+      'Park Hyatt Tokyo': { latitude: 35.6866, longitude: 139.6937 },
+      'Mandarin Oriental Tokyo': { latitude: 35.6851, longitude: 139.7721 },
+      'Aman Tokyo': { latitude: 35.6853, longitude: 139.7644 }
+    };
+
+    return hotelCoordinates[hotelName];
+  };
+
   const initializeMap = async () => {
     console.log(`Initializing map - Attempt ${attempt + 1}/${maxAttempts}`);
 
-    // Check if container exists
     if (!mapContainer.current) {
       console.warn('Map container not found');
       if (attempt < maxAttempts) {
@@ -69,7 +123,6 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
 
       mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
 
-      // Clear existing map instance if any
       clearMapResources();
 
       console.log('Creating new map instance...');
@@ -87,7 +140,6 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         ],
       });
 
-      // Setup map controls and event listeners
       map.current.on('load', () => {
         if (!map.current) return;
         
@@ -106,6 +158,8 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
           'high-color': 'rgb(200, 200, 225)',
           'horizon-blend': 0.2,
         });
+
+        addMarkers();
 
         console.log('Map loaded successfully');
         setIsLoading(false);
