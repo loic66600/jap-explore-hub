@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
@@ -20,7 +21,6 @@ const Navigation = () => {
     { name: 'Villes', href: '/cities' },
     { name: 'Vol', href: '/booking' },
     { name: 'Hébergement', href: '/accommodation' },
-    { name: 'Carte', href: '#map' },
     { name: 'Contact', href: '#contact' },
   ];
 
@@ -47,9 +47,6 @@ const Navigation = () => {
                 {item.name}
               </Link>
             ))}
-            <Link to="/booking">
-              <Button variant="default">Vol</Button>
-            </Link>
           </div>
 
           {/* Mobile Navigation Button */}
@@ -75,11 +72,6 @@ const Navigation = () => {
                   {item.name}
                 </Link>
               ))}
-              <Link to="/booking" onClick={() => setIsMenuOpen(false)}>
-                <Button className="w-full" variant="default">
-                  Vol
-                </Button>
-              </Link>
             </div>
           </div>
         )}
