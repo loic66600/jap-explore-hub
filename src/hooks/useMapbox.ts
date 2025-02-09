@@ -32,16 +32,27 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
   const addMarkers = () => {
     if (!map.current) return;
 
-    if (type === 'cities') {
+    if (type === 'cities' || type === 'planner') {
       mockCities.forEach((city) => {
+        // Couleur différente pour le planificateur
+        const markerColor = type === 'planner' ? '#F97316' : '#9b87f5';
+        
         const marker = new mapboxgl.Marker({
-          color: '#9b87f5'
+          color: markerColor
         })
           .setLngLat([city.coordinates.longitude, city.coordinates.latitude])
           .setPopup(new mapboxgl.Popup().setHTML(`
             <div class="p-2">
               <h3 class="font-bold">${city.name}</h3>
               <p class="text-sm">${city.description}</p>
+              ${type === 'planner' ? `
+                <div class="mt-2">
+                  <p class="text-xs font-semibold">Attractions principales:</p>
+                  <ul class="text-xs list-disc list-inside">
+                    ${city.mainAttractions.map(attraction => `<li>${attraction}</li>`).join('')}
+                  </ul>
+                </div>
+              ` : ''}
             </div>
           `))
           .addTo(map.current!);
@@ -59,7 +70,6 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
       };
 
       Object.entries(cityCoordinates).forEach(([city, coords]) => {
-        // Pour chaque ville, on ajoute 2-3 hébergements légèrement décalés
         const offsets = [
           { lat: 0.01, lng: 0.01 },
           { lat: -0.01, lng: -0.01 },
