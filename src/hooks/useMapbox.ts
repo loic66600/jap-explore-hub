@@ -49,37 +49,44 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         markers.current.push(marker);
       });
     } else if (type === 'accommodations') {
-      mockHotels.forEach((hotel) => {
-        const coordinates = getHotelCoordinates(hotel.hotel.name);
-        if (coordinates) {
+      const cityCoordinates = {
+        'Tokyo': { latitude: 35.6762, longitude: 139.6503 },
+        'Kyoto': { latitude: 35.0116, longitude: 135.7681 },
+        'Osaka': { latitude: 34.6937, longitude: 135.5023 },
+        'Nara': { latitude: 34.6851, longitude: 135.8048 },
+        'Sapporo': { latitude: 43.0618, longitude: 141.3545 },
+        'Hiroshima': { latitude: 34.3853, longitude: 132.4553 }
+      };
+
+      Object.entries(cityCoordinates).forEach(([city, coords]) => {
+        // Pour chaque ville, on ajoute 2-3 hébergements légèrement décalés
+        const offsets = [
+          { lat: 0.01, lng: 0.01 },
+          { lat: -0.01, lng: -0.01 },
+          { lat: 0.01, lng: -0.01 }
+        ];
+
+        offsets.forEach((offset, index) => {
           const marker = new mapboxgl.Marker({
             color: '#F97316'
           })
-            .setLngLat([coordinates.longitude, coordinates.latitude])
+            .setLngLat([
+              coords.longitude + offset.lng,
+              coords.latitude + offset.lat
+            ])
             .setPopup(new mapboxgl.Popup().setHTML(`
               <div class="p-2">
-                <h3 class="font-bold">${hotel.hotel.name}</h3>
-                <p class="text-sm">${hotel.hotel.address.line1}</p>
-                <p class="text-sm font-semibold">${hotel.offers[0].price.total} ${hotel.offers[0].price.currency}</p>
+                <h3 class="font-bold">Hôtel ${index + 1} - ${city}</h3>
+                <p class="text-sm">Un superbe hébergement à ${city}</p>
+                <p class="text-sm font-semibold">À partir de ${150 + (index * 50)}€</p>
               </div>
             `))
             .addTo(map.current!);
           
           markers.current.push(marker);
-        }
+        });
       });
     }
-  };
-
-  const getHotelCoordinates = (hotelName: string) => {
-    // Simulated coordinates for hotels
-    const hotelCoordinates: Record<string, { latitude: number; longitude: number }> = {
-      'Park Hyatt Tokyo': { latitude: 35.6866, longitude: 139.6937 },
-      'Mandarin Oriental Tokyo': { latitude: 35.6851, longitude: 139.7721 },
-      'Aman Tokyo': { latitude: 35.6853, longitude: 139.7644 }
-    };
-
-    return hotelCoordinates[hotelName];
   };
 
   const initializeMap = async () => {
