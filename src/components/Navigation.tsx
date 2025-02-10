@@ -17,12 +17,51 @@ const Navigation = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const element = document.getElementById(targetId);
+    
+    if (element) {
+      const offset = element.offsetTop - 100; // Ajustement pour la navbar fixe
+      window.scrollTo({
+        top: offset,
+        behavior: 'smooth'
+      });
+      setIsMenuOpen(false);
+    }
+  };
+
   const navItems = [
     { name: 'Villes', href: '/cities' },
     { name: 'Vol', href: '/booking' },
     { name: 'Hébergement', href: '/accommodation' },
     { name: 'Contact', href: '#contact' },
   ];
+
+  const renderNavLink = (item: { name: string; href: string }) => {
+    if (item.href.startsWith('#')) {
+      return (
+        <a
+          key={item.name}
+          href={item.href}
+          onClick={(e) => handleAnchorClick(e, item.href)}
+          className="text-secondary hover:text-primary transition-colors"
+        >
+          {item.name}
+        </a>
+      );
+    }
+    return (
+      <Link
+        key={item.name}
+        to={item.href}
+        className="text-secondary hover:text-primary transition-colors"
+      >
+        {item.name}
+      </Link>
+    );
+  };
 
   return (
     <nav
@@ -38,15 +77,7 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                to={item.href.startsWith('#') ? item.href : item.href}
-                className="text-secondary hover:text-primary transition-colors"
-              >
-                {item.name}
-              </Link>
-            ))}
+            {navItems.map((item) => renderNavLink(item))}
           </div>
 
           {/* Mobile Navigation Button */}
@@ -63,14 +94,9 @@ const Navigation = () => {
           <div className="md:hidden absolute top-16 left-0 right-0 bg-white shadow-lg animate-fade-in">
             <div className="px-4 py-2 space-y-2">
               {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href.startsWith('#') ? item.href : item.href}
-                  className="block py-2 text-secondary hover:text-primary transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </Link>
+                <div key={item.name} className="block py-2">
+                  {renderNavLink(item)}
+                </div>
               ))}
             </div>
           </div>
