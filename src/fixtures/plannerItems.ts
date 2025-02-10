@@ -2,7 +2,7 @@
 export const plannerItems = [
   {
     id: "PI001",
-    type: "flight",
+    type: "flight" as const,
     details: {
       origin: "Paris CDG",
       destination: "Tokyo HND",
@@ -16,7 +16,7 @@ export const plannerItems = [
   },
   {
     id: "PI002",
-    type: "accommodation",
+    type: "accommodation" as const,
     details: {
       name: "Park Hyatt Tokyo",
       location: "Shinjuku, Tokyo",
@@ -29,7 +29,7 @@ export const plannerItems = [
   },
   {
     id: "PI003",
-    type: "activity",
+    type: "activity" as const,
     details: {
       name: "Visite du Temple Senso-ji",
       location: "Asakusa, Tokyo",
@@ -43,7 +43,7 @@ export const plannerItems = [
   },
   {
     id: "PI004",
-    type: "transport",
+    type: "transport" as const,
     details: {
       name: "Japan Rail Pass 7 jours",
       coverage: "National",
@@ -74,6 +74,7 @@ export interface Itinerary {
   start_date: string;
   end_date: string;
   total_budget: number;
-  items: string[];
+  items: any;
   created_at?: string;
 }
+

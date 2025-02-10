@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import Navigation from '@/components/Navigation';
@@ -34,12 +34,19 @@ const PlannerPage = () => {
         throw new Error('Aucun utilisateur authentifié trouvé');
       }
 
+      // S'assurer que tous les champs requis sont présents
+      const itineraryToSave = {
+        user_id: user.id,
+        name: currentItinerary.name || 'Mon voyage',
+        start_date: currentItinerary.start_date || new Date().toISOString(),
+        end_date: currentItinerary.end_date || new Date().toISOString(),
+        total_budget: currentItinerary.total_budget || 0,
+        items: currentItinerary.items || []
+      };
+
       const { data, error } = await supabase
         .from('itineraries')
-        .insert([{
-          ...currentItinerary,
-          user_id: user.id
-        }]);
+        .insert([itineraryToSave]);
 
       if (error) throw error;
 
@@ -234,3 +241,4 @@ const PlannerPage = () => {
 };
 
 export default PlannerPage;
+
