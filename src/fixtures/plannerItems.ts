@@ -1,38 +1,25 @@
+
 export const plannerItems = [
   {
     id: "PI001",
     type: "flight",
     details: {
-      origin: "CDG",
-      destination: "HND",
+      origin: "Paris CDG",
+      destination: "Tokyo HND",
       departureDate: "2024-06-15",
       returnDate: "2024-06-30",
       price: 850,
       airline: "Air France",
       duration: "11h30",
-      stops: 0
+      class: "Économique"
     }
   },
   {
     id: "PI002",
-    type: "flight",
-    details: {
-      origin: "CDG",
-      destination: "NRT",
-      departureDate: "2024-06-16",
-      returnDate: "2024-07-01",
-      price: 920,
-      airline: "JAL",
-      duration: "12h45",
-      stops: 1
-    }
-  },
-  {
-    id: "PI003",
-    type: "hotel",
+    type: "accommodation",
     details: {
       name: "Park Hyatt Tokyo",
-      location: "Shinjuku",
+      location: "Shinjuku, Tokyo",
       checkIn: "2024-06-15",
       checkOut: "2024-06-18",
       price: 450,
@@ -41,20 +28,7 @@ export const plannerItems = [
     }
   },
   {
-    id: "PI004",
-    type: "hotel",
-    details: {
-      name: "Mandarin Oriental Kyoto",
-      location: "Kyoto",
-      checkIn: "2024-06-18",
-      checkOut: "2024-06-21",
-      price: 520,
-      rating: 5,
-      amenities: ["Spa", "Jardin japonais", "Restaurant étoilé"]
-    }
-  },
-  {
-    id: "PI005",
+    id: "PI003",
     type: "activity",
     details: {
       name: "Visite du Temple Senso-ji",
@@ -62,19 +36,44 @@ export const plannerItems = [
       date: "2024-06-16",
       duration: "2h",
       price: 0,
-      type: "Culture"
+      type: "Culture",
+      description: "Découverte du plus ancien temple bouddhiste de Tokyo",
+      includes: ["Guide audio", "Plan du temple"]
     }
   },
   {
-    id: "PI006",
-    type: "activity",
+    id: "PI004",
+    type: "transport",
     details: {
-      name: "Cours de cuisine japonaise",
-      location: "Shibuya, Tokyo",
-      date: "2024-06-17",
-      duration: "3h",
-      price: 75,
-      type: "Gastronomie"
+      name: "Japan Rail Pass 7 jours",
+      coverage: "National",
+      startDate: "2024-06-15",
+      endDate: "2024-06-22",
+      price: 280,
+      type: "JR Pass",
+      benefits: [
+        "Accès illimité aux trains JR",
+        "Incluant les Shinkansen",
+        "Réservation de siège gratuite"
+      ]
     }
   }
 ];
+
+// Types correspondant à la structure de la base de données
+export interface PlannerItem {
+  id: string;
+  type: 'flight' | 'accommodation' | 'activity' | 'transport';
+  details: any;
+}
+
+export interface Itinerary {
+  id?: string;
+  user_id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  total_budget: number;
+  items: string[];
+  created_at?: string;
+}

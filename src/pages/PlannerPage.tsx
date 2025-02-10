@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
 import Navigation from '@/components/Navigation';
@@ -10,44 +10,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plane, Hotel, MapPin, Train, Calculator, Share2 } from 'lucide-react';
-import { plannerFlights } from '@/fixtures/plannerFlights';
-import { plannerAccommodations } from '@/fixtures/plannerAccommodations';
-import { plannerActivities } from '@/fixtures/plannerActivities';
-import { plannerTransports } from '@/fixtures/plannerTransports';
-
-interface Itinerary {
-  id?: string;
-  user_id: string;
-  items: any[];
-  total_budget: number;
-  created_at?: string;
-}
+import { plannerItems, type PlannerItem, type Itinerary } from '@/fixtures/plannerItems';
 
 const PlannerPage = () => {
-  const [itineraries, setItineraries] = useState<Itinerary[]>([]);
-  const [budget, setBudget] = useState<number>(0);
+  const [currentItinerary, setCurrentItinerary] = useState<Partial<Itinerary>>({
+    name: 'Mon voyage au Japon',
+    start_date: '2024-06-15',
+    end_date: '2024-06-30',
+    total_budget: 0,
+    items: []
+  });
   const [selectedTab, setSelectedTab] = useState("flights");
 
-  const calculateTotalBudget = () => {
-    return budget;
-  };
-
-  const saveItinerary = async (itinerary: Omit<Itinerary, 'id' | 'created_at'>) => {
+  const saveItinerary = async () => {
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       
       if (userError) {
-        throw new Error('You must be logged in to save an itinerary');
+        throw new Error('Vous devez être connecté pour sauvegarder un itinéraire');
       }
 
       if (!user) {
-        throw new Error('No authenticated user found');
+        throw new Error('Aucun utilisateur authentifié trouvé');
       }
 
       const { data, error } = await supabase
         .from('itineraries')
         .insert([{
-          ...itinerary,
+          ...currentItinerary,
           user_id: user.id
         }]);
 
@@ -76,113 +66,62 @@ const PlannerPage = () => {
     });
   };
 
-  const renderFlights = () => (
-    <div className="space-y-4">
-      {plannerFlights.map((flight) => (
-        <div key={flight.id} className="p-4 border rounded-lg hover:shadow-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <h4 className="font-semibold">{flight.airline}</h4>
-              <p className="text-sm text-gray-600">
-                {flight.origin} → {flight.destination}
-              </p>
-              <p className="text-sm text-gray-500">
-                {flight.duration} - {flight.class}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold">{flight.price}€</p>
-              <Button size="sm" variant="outline" className="mt-2">
-                Ajouter
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const addItemToItinerary = (item: PlannerItem) => {
+    setCurrentItinerary(prev => ({
+      ...prev,
+      items: [...(prev.items || []), item.id],
+      total_budget: (prev.total_budget || 0) + Number(item.details.price)
+    }));
 
-  const renderAccommodations = () => (
-    <div className="space-y-4">
-      {plannerAccommodations.map((accommodation) => (
-        <div key={accommodation.id} className="p-4 border rounded-lg hover:shadow-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <h4 className="font-semibold">{accommodation.name}</h4>
-              <p className="text-sm text-gray-600">{accommodation.location}</p>
-              <p className="text-sm text-gray-500">{accommodation.room}</p>
-              <div className="flex gap-2 mt-1">
-                {accommodation.amenities.slice(0, 2).map((amenity, index) => (
-                  <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {amenity}
-                  </span>
-                ))}
+    toast({
+      title: 'Élément ajouté',
+      description: `${item.details.name || item.type} ajouté à votre itinéraire`,
+    });
+  };
+
+  const renderItems = (type: PlannerItem['type']) => {
+    const items = plannerItems.filter(item => item.type === type);
+    
+    return (
+      <div className="space-y-4">
+        {items.map((item) => (
+          <div key={item.id} className="p-4 border rounded-lg hover:shadow-md">
+            <div className="flex justify-between items-center">
+              <div>
+                <h4 className="font-semibold">{item.details.name || `${item.type} ${item.id}`}</h4>
+                <p className="text-sm text-gray-600">{item.details.location || item.details.destination}</p>
+                {item.type === 'flight' && (
+                  <p className="text-sm text-gray-500">
+                    {item.details.duration} - {item.details.class}
+                  </p>
+                )}
+                {item.type === 'accommodation' && (
+                  <div className="flex gap-2 mt-1">
+                    {item.details.amenities?.slice(0, 2).map((amenity: string, index: number) => (
+                      <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {amenity}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="text-right">
+                <p className="font-semibold">{item.details.price}€</p>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="mt-2"
+                  onClick={() => addItemToItinerary(item)}
+                >
+                  Ajouter
+                </Button>
               </div>
             </div>
-            <div className="text-right">
-              <p className="font-semibold">{accommodation.price}€/nuit</p>
-              <Button size="sm" variant="outline" className="mt-2">
-                Ajouter
-              </Button>
-            </div>
           </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderActivities = () => (
-    <div className="space-y-4">
-      {plannerActivities.map((activity) => (
-        <div key={activity.id} className="p-4 border rounded-lg hover:shadow-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <h4 className="font-semibold">{activity.name}</h4>
-              <p className="text-sm text-gray-600">{activity.location}</p>
-              <p className="text-sm text-gray-500">
-                {activity.duration} - {activity.type}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold">{activity.price}€</p>
-              <Button size="sm" variant="outline" className="mt-2">
-                Ajouter
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  const renderTransport = () => (
-    <div className="space-y-4">
-      {plannerTransports.map((transport) => (
-        <div key={transport.id} className="p-4 border rounded-lg hover:shadow-md">
-          <div className="flex justify-between items-center">
-            <div>
-              <h4 className="font-semibold">{transport.name}</h4>
-              <p className="text-sm text-gray-600">{transport.coverage}</p>
-              <p className="text-sm text-gray-500">Validité: {transport.validity}</p>
-              <div className="flex gap-2 mt-1">
-                {transport.benefits.slice(0, 1).map((benefit, index) => (
-                  <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    {benefit}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="font-semibold">{transport.price}€</p>
-              <Button size="sm" variant="outline" className="mt-2">
-                Ajouter
-              </Button>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -200,11 +139,7 @@ const PlannerPage = () => {
               Partager
             </Button>
             <Button
-              onClick={() => saveItinerary({
-                user_id: '',
-                items: [],
-                total_budget: calculateTotalBudget()
-              })}
+              onClick={saveItinerary}
               className="flex items-center gap-2"
             >
               Sauvegarder
@@ -236,19 +171,19 @@ const PlannerPage = () => {
                 </TabsList>
 
                 <TabsContent value="flights" className="p-4">
-                  {renderFlights()}
+                  {renderItems('flight')}
                 </TabsContent>
 
                 <TabsContent value="hotels" className="p-4">
-                  {renderAccommodations()}
+                  {renderItems('accommodation')}
                 </TabsContent>
 
                 <TabsContent value="activities" className="p-4">
-                  {renderActivities()}
+                  {renderItems('activity')}
                 </TabsContent>
 
                 <TabsContent value="transport" className="p-4">
-                  {renderTransport()}
+                  {renderItems('transport')}
                 </TabsContent>
 
               </Tabs>
@@ -269,36 +204,23 @@ const PlannerPage = () => {
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="budget">Budget Total (¥)</Label>
+                    <Label htmlFor="tripName">Nom du voyage</Label>
                     <Input
-                      id="budget"
-                      type="number"
-                      value={budget}
-                      onChange={(e) => setBudget(Number(e.target.value))}
+                      id="tripName"
+                      value={currentItinerary.name}
+                      onChange={(e) => setCurrentItinerary(prev => ({ ...prev, name: e.target.value }))}
                       className="mt-1"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Vols</span>
-                      <span>¥0</span>
+                      <span>Budget Total</span>
+                      <span>€{currentItinerary.total_budget}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Hébergements</span>
-                      <span>¥0</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Activités</span>
-                      <span>¥0</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Transport Local</span>
-                      <span>¥0</span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-semibold">
-                      <span>Total</span>
-                      <span>¥{calculateTotalBudget()}</span>
+                      <span>Éléments sélectionnés</span>
+                      <span>{currentItinerary.items?.length || 0}</span>
                     </div>
                   </div>
                 </div>
@@ -312,4 +234,3 @@ const PlannerPage = () => {
 };
 
 export default PlannerPage;
-
