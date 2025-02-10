@@ -21,7 +21,7 @@ const Navigation = () => {
     { name: 'Villes', href: '/cities' },
     { name: 'Vol', href: '/booking' },
     { name: 'Hébergement', href: '/accommodation' },
-    { name: 'Contact', href: '#contact' },
+    { name: 'Contact', href: '/contact' },
   ];
 
   return (
@@ -41,7 +41,7 @@ const Navigation = () => {
             {navItems.map((item) => (
               <Link
                 key={item.name}
-                to={item.href.startsWith('/') ? item.href : `/${item.href}`}
+                to={item.href}
                 className="text-secondary hover:text-primary transition-colors"
               >
                 {item.name}
@@ -65,7 +65,7 @@ const Navigation = () => {
               {navItems.map((item) => (
                 <Link
                   key={item.name}
-                  to={item.href.startsWith('/') ? item.href : `/${item.href}`}
+                  to={item.href}
                   className="block py-2 text-secondary hover:text-primary transition-colors"
                   onClick={() => setIsMenuOpen(false)}
                 >
