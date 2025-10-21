@@ -14,6 +14,7 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markers = useRef<mapboxgl.Marker[]>([]);
+  const cachedToken = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -99,6 +100,57 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
     }
   };
 
+  const getTokenFromEnv = () => {
+    const env = import.meta.env as Record<string, string | undefined>;
+    const possibleKeys = [
+      'VITE_MAPBOX_PUBLIC_TOKEN',
+      'VITE_MAPBOX_TOKEN',
+      'PUBLIC_MAPBOX_PUBLIC_TOKEN',
+      'PUBLIC_MAPBOX_TOKEN',
+      'MAPBOX_PUBLIC_TOKEN',
+    ];
+
+    for (const key of possibleKeys) {
+      const value = env[key];
+      if (value && value.trim().length > 0) {
+        console.log(`Using Mapbox token from environment variable ${key}`);
+        return value;
+      }
+    }
+
+    return null;
+  };
+
+  const fetchMapboxToken = async () => {
+    if (cachedToken.current) {
+      return cachedToken.current;
+    }
+
+    const envToken = getTokenFromEnv();
+    if (envToken) {
+      cachedToken.current = envToken;
+      return envToken;
+    }
+
+    console.log('Fetching Mapbox token from Supabase function...');
+    const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
+      body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
+    });
+
+    if (secretError) {
+      console.error('Error fetching Mapbox token from Supabase:', secretError);
+      throw new Error(secretError.message || 'Failed to fetch Mapbox token');
+    }
+
+    if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
+      console.error('No Mapbox token received from Supabase function');
+      throw new Error('No Mapbox token received from server');
+    }
+
+    cachedToken.current = secretData.MAPBOX_PUBLIC_TOKEN;
+    return secretData.MAPBOX_PUBLIC_TOKEN;
+  };
+
   const initializeMap = async () => {
     console.log(`Initializing map - Attempt ${attempt + 1}/${maxAttempts}`);
 
@@ -123,22 +175,13 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
       setIsLoading(true);
       setError(null);
 
-      console.log('Fetching Mapbox token...');
-      const { data: secretData, error: secretError } = await supabase.functions.invoke('get-secrets', {
-        body: { secrets: ['MAPBOX_PUBLIC_TOKEN'] }
-      });
+      const mapboxToken = await fetchMapboxToken();
 
-      if (secretError) {
-        console.error('Error fetching Mapbox token:', secretError);
-        throw new Error(secretError.message || 'Failed to fetch Mapbox token');
+      if (!mapboxToken) {
+        throw new Error('Aucun jeton Mapbox disponible. Vérifiez votre configuration.');
       }
 
-      if (!secretData?.MAPBOX_PUBLIC_TOKEN) {
-        console.error('No Mapbox token received');
-        throw new Error('No Mapbox token received from server');
-      }
-
-      mapboxgl.accessToken = secretData.MAPBOX_PUBLIC_TOKEN;
+      mapboxgl.accessToken = mapboxToken;
 
       clearMapResources();
 
