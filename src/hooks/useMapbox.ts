@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/use-toast';
-import { mockHotels } from '@/fixtures/hotels';
 import { mockCities } from '@/fixtures/cities';
+import { mockHotels } from '@/fixtures/hotels';
 
 interface UseMapboxProps {
   type?: 'cities' | 'planner' | 'accommodation' | 'flight' | 'accommodations' | 'booking';
@@ -36,7 +36,7 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
       mockCities.forEach((city) => {
         // Couleur différente pour le planificateur
         const markerColor = type === 'planner' ? '#F97316' : '#9b87f5';
-        
+
         const marker = new mapboxgl.Marker({
           color: markerColor
         })
@@ -59,8 +59,8 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         
         markers.current.push(marker);
       });
-    } else if (type === 'accommodations') {
-      const cityCoordinates = {
+    } else if (type === 'accommodations' || type === 'accommodation') {
+      const cityCoordinates: Record<string, { latitude: number; longitude: number }> = {
         'Tokyo': { latitude: 35.6762, longitude: 139.6503 },
         'Kyoto': { latitude: 35.0116, longitude: 135.7681 },
         'Osaka': { latitude: 34.6937, longitude: 135.5023 },
@@ -69,32 +69,49 @@ export const useMapbox = ({ type = 'cities' }: UseMapboxProps) => {
         'Hiroshima': { latitude: 34.3853, longitude: 132.4553 }
       };
 
-      Object.entries(cityCoordinates).forEach(([city, coords]) => {
-        const offsets = [
-          { lat: 0.01, lng: 0.01 },
-          { lat: -0.01, lng: -0.01 },
-          { lat: 0.01, lng: -0.01 }
-        ];
+      const offsets = [
+        { lat: 0.01, lng: 0.01 },
+        { lat: -0.01, lng: -0.01 },
+        { lat: 0.01, lng: -0.01 },
+        { lat: -0.01, lng: 0.01 }
+      ];
 
-        offsets.forEach((offset, index) => {
-          const marker = new mapboxgl.Marker({
-            color: '#F97316'
-          })
-            .setLngLat([
-              coords.longitude + offset.lng,
-              coords.latitude + offset.lat
-            ])
-            .setPopup(new mapboxgl.Popup().setHTML(`
-              <div class="p-2">
-                <h3 class="font-bold">Hôtel ${index + 1} - ${city}</h3>
-                <p class="text-sm">Un superbe hébergement à ${city}</p>
-                <p class="text-sm font-semibold">À partir de ${150 + (index * 50)}€</p>
-              </div>
-            `))
-            .addTo(map.current!);
-          
-          markers.current.push(marker);
-        });
+      mockHotels.forEach((hotel, index) => {
+        const cityName = hotel.hotel.address?.cityName;
+        if (!cityName) {
+          console.warn('Hotel without city information found');
+          return;
+        }
+
+        const coordinates = cityCoordinates[cityName];
+
+        if (!coordinates) {
+          console.warn(`No coordinates found for city ${cityName}`);
+          return;
+        }
+
+        const offset = offsets[index % offsets.length];
+        const primaryOffer = hotel.offers[0];
+        const distance = hotel.hotel.hotelDistance?.distance;
+        const distanceLabel = typeof distance === 'number' ? `${distance.toFixed(1)} km du centre` : 'Distance inconnue';
+
+        const marker = new mapboxgl.Marker({
+          color: '#F97316'
+        })
+          .setLngLat([
+            coordinates.longitude + offset.lng,
+            coordinates.latitude + offset.lat
+          ])
+          .setPopup(new mapboxgl.Popup().setHTML(`
+            <div class="p-2">
+              <h3 class="font-bold">${hotel.hotel.name}</h3>
+              <p class="text-sm">${distanceLabel}</p>
+              ${primaryOffer ? `<p class="text-sm font-semibold">À partir de ${primaryOffer.price.total} ${primaryOffer.price.currency}</p>` : ''}
+            </div>
+          `))
+          .addTo(map.current!);
+
+        markers.current.push(marker);
       });
     }
   };
